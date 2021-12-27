@@ -35,3 +35,6 @@ npm-debug.log
 
 # Config files
 /config/
+
+# local environment for production
+.env

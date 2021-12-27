@@ -9,6 +9,35 @@ To start your Phoenix server:
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+  * check lib/release_tasks.ex
+  * MIX_ENV=prod mix assets.deploy
+  * prune by running mix phx.digest.clean --all
+  * mix distillery.init
+
+## Run local environment
+
+    # Running in production we set up local environment  
+    `. .env`
+
+## Running Distillery and creating releases
+
+Release created at _build/dev/rel/phraze!
+
+    # To start your system
+    _build/dev/rel/phraze/bin/phraze start
+
+Once the release is running:
+
+    # To connect to it remotely
+    _build/dev/rel/phraze/bin/phraze remote
+
+    # To stop it gracefully (you may also send SIGINT/SIGTERM)
+    _build/dev/rel/phraze/bin/phraze stop
+
+To list all commands:
+
+    _build/dev/rel/phraze/bin/phraze
+
 
 ## Learn more
 
