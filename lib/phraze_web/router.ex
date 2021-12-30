@@ -18,6 +18,11 @@ defmodule PhrazeWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+
+    scope "/room", as: :room do
+      live "/new", Room.NewLive, :new
+      live "/:slug", Room.ShowLive, :show
+    end
   end
 
   # Other scopes may use custom stacks.

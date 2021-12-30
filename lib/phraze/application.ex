@@ -15,7 +15,9 @@ defmodule Phraze.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Phraze.PubSub},
       # Start the Endpoint (http/https)
-      PhrazeWeb.Endpoint
+      PhrazeWeb.Presence,
+      PhrazeWeb.Endpoint,
+      PhrazeWeb.Stun
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
     ]
