@@ -1,4 +1,4 @@
-defmodule Phraze.Presence do
+defmodule PhrazeWeb.Presence do
   use Phoenix.Presence,
     otp_app: :phraze,
     pubsub_server: Phraze.PubSub

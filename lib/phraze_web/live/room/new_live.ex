@@ -9,9 +9,7 @@ defmodule PhrazeWeb.Room.NewLive do
     ~L"""
     <main class="main main--new-room">
       <%= form_for @changeset, "#", [phx_change: "validate", phx_submit: "save", class: "form"], fn f -> %>
-        <h1 class="title">
-          Phraze
-        </h1>
+        <h1 class="title">Phraze</h1>
 
         <label class="label">
           Room Name:
