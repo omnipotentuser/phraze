@@ -22,7 +22,7 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-        run: mix deps.get
-        run: mix coveralls.github
+          mix deps.get
+          mix coveralls.github
       - run: echo "🍏 This job's status is ${{ job.status }}."
 
