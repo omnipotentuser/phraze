@@ -12,7 +12,7 @@ RUN mix local.hex --force \
   && mix local.rebar --force
 
 # Copy over all the necessary application files and directories
-WORKDIR /app
+WORKDIR /phraze
 
 COPY assets ./assets
 COPY config ./config
