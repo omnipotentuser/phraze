@@ -19,6 +19,13 @@ defmodule Phraze.MixProject do
             runtime_tools: :permanent
           ]
         ]
+      ],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
       ]
     ]
   end
@@ -59,8 +66,11 @@ defmodule Phraze.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:uuid, "~> 1.1"},
-      {:distillery, "~> 2.0"},
-      {:stun, "~> 1.0"}
+      {:stun, "~> 1.0"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:fun_with_flags, "~> 1.8.0"},
     ]
   end
 
