@@ -17,7 +17,8 @@ defmodule Phraze.Application do
       # Start the Endpoint (http/https)
       PhrazeWeb.Presence,
       PhrazeWeb.Endpoint,
-      PhrazeWeb.Stun
+      PhrazeWeb.Stun,
+      FunWithFlags.Supervisor,
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
     ]
