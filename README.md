@@ -38,6 +38,12 @@ To list all commands:
 
     _build/dev/rel/phraze/bin/phraze
 
+## Running on Docker
+
+  * docker image build -t phraze:latest .
+  * docker run --network=host -e MIX_ENV=prod phraze:latest
+  * docker run --network=host -e phraze:latest
+  * TODO - add docker-compose.yml to add environments and multiple docker files if needed
 
 ## Learn more
 
