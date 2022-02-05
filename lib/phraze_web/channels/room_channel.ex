@@ -1,5 +1,5 @@
 defmodule PhrazeWeb.RoomChannel do
-  use PhrazeWeb, :channel
+  use Phoenix.Channel
 
   @impl true
   def join("room:lobby", payload, socket) do

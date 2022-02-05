@@ -1,5 +1,8 @@
 name: Phraze Github Actions Test
-on: [push]
+on:
+  push:
+    branches:
+      - main
 jobs:
   Phraze-GitHub-Actions-Test:
     runs-on: ubuntu-latest

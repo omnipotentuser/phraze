@@ -8,6 +8,7 @@ defmodule PhrazeWeb.UserSocket do
 
   ## Channels
 
+  channel "ping", PhrazeWeb.PingChannel
   channel "room:*", PhrazeWeb.RoomChannel
 
   # Socket params are passed from the client and can
@@ -38,4 +39,7 @@ defmodule PhrazeWeb.UserSocket do
   # Returning `nil` makes this socket anonymous.
   @impl true
   def id(_socket), do: nil
+
+  #@impl true
+  #def id(socket), do: "user_socket:#{socket.assigns.user_id}"
 end
