@@ -43,7 +43,7 @@ To list all commands:
   * docker image build -t phraze:latest .
   * docker run --network=host -e MIX_ENV=prod phraze:latest
   * docker run --network=host -e phraze:latest
-  * TODO - add docker-compose.yml to add environments and multiple docker files if needed
+  * to use docker-compose, do `docker-compose up` and look at docker-compose.yml. You may set port or other environmental variables such as MIX_ENV.
 
 ## Learn more
 
