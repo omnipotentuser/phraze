@@ -5,5 +5,5 @@ services:
     network_mode: "host"
     env_file:
       - .env
-        # environment:
-        # - MIX_ENV=dev
+  # environment:
+  # - MIX_ENV=dev
