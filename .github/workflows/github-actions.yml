@@ -12,6 +12,7 @@ jobs:
       matrix:
         otp: [24.1.7]
         elixir: [1.13.1]
+    container: elixir:${{matrix.elixir}}
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
