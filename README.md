@@ -43,7 +43,7 @@ To list all commands:
   * docker image build -t phraze:latest .
   * docker run --network=host -e MIX_ENV=prod phraze:latest
   * docker run --network=host -e phraze:latest
-  * to use docker-compose, do `docker-compose up` and look at docker-compose.yml. You may set port or other environmental variables such as MIX_ENV.
+  * to use docker-compose, run `source .env` before running `docker-compose up`. You may set port or other environmental variables such as MIX_ENV.
 
 ## Learn more
 

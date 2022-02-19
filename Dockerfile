@@ -5,6 +5,7 @@ RUN mix local.hex --force \
   && apt-get update \
   && curl -sL https://deb.nodesource.com/setup_16.x | bash \
   && apt-get install -y apt-utils \
+  && apt-get install -y libssl-dev \
   && apt-get install -y nodejs \
   && apt-get install -y build-essential \
   && apt-get install -y inotify-tools \
