@@ -78,4 +78,4 @@ jobs:
           DATABASE_PASSWORD: postgres_password
           POSTGRES_PORT: 5432
           DATABASE_USERNAME: postgres_user
-          DATABASE_URL: ecto://postgre_user:postgres_password@localhost/postgres_db
+          DATABASE_URL: ecto://postgres_user:postgres_password@localhost/postgres_db
