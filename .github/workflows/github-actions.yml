@@ -2,7 +2,7 @@ name: Phraze Github Actions Test
 on:
   push:
     branches:
-      - fly_cd
+      - github_actions
       - main
 jobs:
   Phraze-GitHub-Actions-Test:
