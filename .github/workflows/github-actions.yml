@@ -70,8 +70,9 @@ jobs:
       - run: mix local.rebar --force
       - run: mix deps.get
       - name: "Run ExCoveralls and generate HTML"
-        run: mix coveralls.github
-        run: echo "Checking environment... POSTGRES_DB = ${{ env.POSTGRES_DB }}, POSTGRES_PASSWORD = ${{ env.POSTGRES_PASSWORD }}"
+        run: |
+          mix coveralls.github
+          echo "Checking environment... POSTGRES_DB = ${{ env.POSTGRES_DB }}, POSTGRES_PASSWORD = ${{ env.POSTGRES_PASSWORD }}"
         env:
           POSTGRES_DB: postgres_db
           POSTGRES_PASSWORD: postgres_password
