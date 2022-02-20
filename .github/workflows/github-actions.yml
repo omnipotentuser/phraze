@@ -11,9 +11,12 @@ jobs:
     strategy:
       matrix:
         otp: [24.1.7]
-        elixir: [1.13.1]
-    container:
-      image: hexpm/elixir:1.13.1-erlang-24.0.3-debian-bullseye-20210902-slim
+        elixir: [1.13.3]
+        database_name: postgres
+        databaes_pw: postgres
+        database_port: 5432
+        database_user: postgres
+        database_hostname: postgres
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,14 +28,10 @@ jobs:
         # service environment variables
         # `POSTGRES_HOST` is `postgres`
         env:
-          # optional (defaults to `postgres`)
-          POSTGRES_DB: postgres_db
-          # required
-          POSTGRES_PASSWORD: postgres_password
-          # optional (defaults to `5432`)
-          POSTGRES_PORT: 5432
-          # optional (defaults to `postgres`)
-          POSTGRES_USER: postgres_user
+          POSTGRES_DB: {{matrix.database_name}}
+          POSTGRES_PASSWORD: {{matrix.postgres_pw}}
+          POSTGRES_PORT: {{matrix.database_port}}
+          POSTGRES_USER: {{matrix.database_user}}
         ports:
           # maps tcp port 5432 on service container to the host
           - 5432:5432
@@ -46,36 +45,29 @@ jobs:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
       - name: Install PostgreSQL client
         run: |
           apt-get update
           apt-get install --yes postgresql-client
-
       # queries database with postgres client
       - name: Query database
-        run: psql -h postgres -d postgres_db -U postgres_user -c 'SELECT 1;'
+        run: psql -h {{matrix.database_hostname}} -d {{matrix.database_name}} -U {{matrix.database_user}} -c 'SELECT 1;'
         env:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
-          PGPASSWORD: postgres_password
-
-      - uses: actions/checkout@v2
-      - run: |
-          apt-get install -y libssl-dev
-          apt-get install -y apt-utils
-          apt-get install -y build-essential
-          apt-get install -y inotify-tools
-      - run: mix local.hex --force
-      - run: mix archive.install --force hex phx_new 1.6.5
-      - run: mix local.rebar --force
-      - run: mix deps.get
+          PGPASSWORD: {{matrix.database_pw}}
       - name: "Run ExCoveralls and generate HTML"
+        env:
+          DATABASE_NAME: {{matrix.database_name}}
+          DATABASE_PASSWORD: {{matrix.database_pw}}
+          POSTGRES_PORT: {{matrix.database_port}}
+          DATABASE_USERNAME: {{matrix.database_user}}
+          DATABASE_URL: ecto://{{matrix.database_user}}:{{matrix.database_pw}}@{{matrix.database_hostname}}/{{matrix.database_name}}
         run: |
           mix coveralls.github
           echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
-        env:
-          DATABASE_NAME: postgres_db
-          DATABASE_PASSWORD: postgres_password
-          POSTGRES_PORT: 5432
-          DATABASE_USERNAME: postgres_user
-          DATABASE_URL: ecto://postgres_user:postgres_password@localhost/postgres_db

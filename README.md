@@ -1,3 +1,5 @@
+[![Phraze Github Actions Test](https://github.com/omnipotentuser/phraze/actions/workflows/github-actions.yml/badge.svg)](https://github.com/omnipotentuser/phraze/actions/workflows/github-actions.yml)
+
 # Phraze
 
 To start your Phoenix server:
