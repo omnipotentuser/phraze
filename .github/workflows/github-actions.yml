@@ -50,7 +50,6 @@ jobs:
         run: |
           apt-get update
           apt-get install --yes postgresql-client
-          apt-get install --yes libssl-dev
 
       # queries database with postgres client
       - name: Query database
@@ -61,6 +60,12 @@ jobs:
           PGPASSWORD: postgres_password
 
       - uses: actions/checkout@v2
+      - run: |
+          apt-get install -y libssl-dev
+          apt-get install -y apt-utils
+          apt-get install -y build-essential
+          apt-get install -y inotify-tools
+      - run: mix archive.install --force hex phx_new 1.6.5
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
