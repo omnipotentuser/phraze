@@ -10,8 +10,10 @@ jobs:
     name: Phraze OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: [24.1.7]
-        elixir: [1.13.3]
+        otp:
+        - 24.1.7
+        elixir:
+        - 1.13.3
         database_name:
         - postgres
         databaes_pw:
@@ -22,6 +24,8 @@ jobs:
         - postgres
         database_hostname:
         - postgres
+    container:
+      image: hexpm/elixir:1.13.3-erlang-24.1.7-debian-bullseye-20210902
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,15 +54,11 @@ jobs:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - uses: actions/checkout@v2
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
       - name: Install PostgreSQL client
         run: |
           apt-get update
           apt-get install --yes postgresql-client
+
       # queries database with postgres client
       - name: Query database
         run: psql -h ${{matrix.database_hostname}} -d ${{matrix.database_name}} -U ${{matrix.database_user}} -c 'SELECT 1;'
@@ -66,13 +66,27 @@ jobs:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
           PGPASSWORD: ${{matrix.database_pw}}
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - run: |
+          apt-get install -y libssl-dev
+          apt-get install -y apt-utils
+          apt-get install -y build-essential
+          apt-get install -y inotify-tools
+      - run: mix local.hex --force
+      - run: mix archive.install --force hex phx_new 1.6.5
+      - run: mix local.rebar --force
+      - run: mix deps.get
       - name: "Run ExCoveralls and generate HTML"
+        run: |
+          mix coveralls.github
+          echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
         env:
           DATABASE_NAME: ${{matrix.database_name}}
           DATABASE_PASSWORD: ${{matrix.database_pw}}
           POSTGRES_PORT: ${{matrix.database_port}}
           DATABASE_USERNAME: ${{matrix.database_user}}
           DATABASE_URL: ecto://${{matrix.database_user}}:${{matrix.database_pw}}@${{matrix.database_hostname}}/${{matrix.database_name}}
-        run: |
-          mix coveralls.github
-          echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
