@@ -12,7 +12,8 @@ jobs:
       matrix:
         otp: [24.1.7]
         elixir: [1.13.1]
-    container: elixir:${{matrix.elixir}}
+    container:
+      image: hexpm/elixir:1.13.1-erlang-24.0.3-debian-bullseye-20210902-slim
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,10 +60,6 @@ jobs:
           PGPASSWORD: postgres_password
 
       - uses: actions/checkout@v2
-      - uses: erlef/setup-beam@v1
-        with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
       - run: mix deps.get
       - run: mix coveralls.github
 
