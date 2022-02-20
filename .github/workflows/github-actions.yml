@@ -65,8 +65,8 @@ jobs:
           apt-get install -y apt-utils
           apt-get install -y build-essential
           apt-get install -y inotify-tools
-      - run: mix archive.install --force hex phx_new 1.6.5
       - run: mix local.hex --force
+      - run: mix archive.install --force hex phx_new 1.6.5
       - run: mix local.rebar --force
       - run: mix deps.get
       - run: mix coveralls.github
