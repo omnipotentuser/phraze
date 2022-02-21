@@ -7,9 +7,8 @@ on:
 
 jobs:
   build:
-    name: Build and test
     runs-on: ubuntu-latest
-    name: Phraze OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    name: Phraze Build and Test OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
         otp:
