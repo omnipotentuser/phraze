@@ -15,7 +15,7 @@ jobs:
         elixir:
         - 1.13.3
         database_name:
-        - postgres
+        - phraze_db
         databaes_pw:
         - postgres
         database_port:
@@ -23,7 +23,7 @@ jobs:
         database_user:
         - postgres
         database_hostname:
-        - postgres
+        - 127.0.0.1
     container:
       image: hexpm/elixir:1.13.3-erlang-24.1.7-debian-bullseye-20210902
     env:
