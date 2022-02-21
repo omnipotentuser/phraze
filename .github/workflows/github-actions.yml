@@ -25,6 +25,9 @@ jobs:
         - postgres
         database_hostname:
         - postgres
+    env:
+      MIX_ENV: test
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     services:
       # label used to access the service container
       postgres:
