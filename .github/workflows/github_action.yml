@@ -67,6 +67,7 @@ jobs:
           PGPASSWORD: postgres_pw
       - uses: actions/checkout@v2
       - uses: erlef/setup-beam@v1
+        env: ImageOS:ubuntu20
         with:
           otp-version: ${{matrix.otp}}
           elixir-version: ${{matrix.elixir}}
