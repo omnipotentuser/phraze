@@ -54,7 +54,7 @@ jobs:
 
       # queries database with postgres client
       - name: Query database
-        run: psql -h postgres -d ${{matrix.database_name}} -U ${{matrix.database_user}} -c 'SELECT 1;'
+        run: psql -h postgres -d postgres -U postgres -c 'SELECT 1;'
         env:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
