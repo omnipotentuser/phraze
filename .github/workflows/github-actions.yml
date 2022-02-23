@@ -15,16 +15,6 @@ jobs:
         - 24.1.7
         elixir:
         - 1.13.3
-        database_name:
-        - postgres
-        databaes_pw:
-        - postgres
-        database_port:
-        - 5432
-        database_user:
-        - postgres
-        database_hostname:
-        - postgres
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,10 +26,10 @@ jobs:
         # service environment variables
         # `POSTGRES_HOST` is `postgres`
         env:
-          POSTGRES_DB: ${{matrix.database_name}}
-          POSTGRES_PASSWORD: ${{matrix.postgres_pw}}
-          POSTGRES_PORT: ${{matrix.database_port}}
-          POSTGRES_USER: ${{matrix.database_user}}
+          POSTGRES_DB: postgres_db
+          POSTGRES_PASSWORD: postgres_pw
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres_user
         ports:
           # maps tcp port 5432 on service container to the host
           - 5432:5432
@@ -56,11 +46,11 @@ jobs:
         apt-get install --yes postgresql-client
     # queries database with postgres client
     - name: Query database
-      run: psql -h ${{matrix.database_hostname}} -d ${{matrix.database_name}} -U ${{matrix.database_user}} -c 'SELECT 1;'
+      run: psql -h postgres -d postgres_db -U postgres_user -c 'SELECT 1;'
       env:
         # postgress password is required; alternatively, you can run:
         # `PGPASSWORD=postgres_password psql ...`
-        PGPASSWORD: ${{matrix.database_pw}}
+        PGPASSWORD: postgres_pw
     - uses: actions/checkout@v2
     - name: Set up Elixir
       uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
@@ -77,11 +67,11 @@ jobs:
       run: mix deps.get
     - name: "Run ExCoveralls and generate HTML"
       env:
-        DATABASE_NAME: ${{matrix.database_name}}
-        DATABASE_PASSWORD: ${{matrix.database_pw}}
-        POSTGRES_PORT: ${{matrix.database_port}}
-        DATABASE_USERNAME: ${{matrix.database_user}}
-        DATABASE_URL: ecto://${{matrix.database_user}}:${{matrix.database_pw}}@${{matrix.database_hostname}}/${{matrix.database_name}}
+        DATABASE_NAME: postgres_db
+        DATABASE_PASSWORD: postgres_pw
+        POSTGRES_PORT: 5432
+        DATABASE_USERNAME: postgres_user
+        DATABASE_URL: ecto://postgres_user:postgres_pw@postgres/postgres_db
       run: |
         echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
         mix coveralls.github
