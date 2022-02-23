@@ -1,0 +1,75 @@
+name: Phraze CI
+on:
+  push:
+    branches: [ master, github_actions ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Phraze Build and Test OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    container: elixir:latest
+    strategy:
+      matrix:
+        otp:
+        - 24.1.7
+        elixir:
+        - 1.13.3
+    services:
+      # label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:latest
+        # service environment variables
+        # `POSTGRES_HOST` is `postgres`
+        env:
+          POSTGRES_DB: postgres_db
+          POSTGRES_PASSWORD: postgres_pw
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres_user
+        ports:
+          # maps tcp port 5432 on service container to the host
+          - 5432:5432
+        # set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Elixir
+      uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
+      with:
+        elixir-version: ${{matrix.elixir}} # Define the elixir version [required]
+        otp-version: ${{matrix.otp}} # Define the OTP version [required]
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    - name: Install PostgreSQL client
+      run: |
+        apt-get update
+        apt-get install --yes postgresql-client
+    # queries database with postgres client
+    - name: Query database
+      run: psql -h postgres -d postgres_db -U postgres_user -c 'SELECT 1;'
+      env:
+        # postgress password is required; alternatively, you can run:
+        # `PGPASSWORD=postgres_password psql ...`
+        PGPASSWORD: postgres_pw
+    - name: Install dependencies
+      run: mix deps.get
+    - name: "Run ExCoveralls and generate HTML"
+      env:
+        DATABASE_NAME: postgres_db
+        DATABASE_PASSWORD: postgres_pw
+        POSTGRES_PORT: 5432
+        DATABASE_USERNAME: postgres_user
+        DATABASE_URL: ecto://postgres_user:postgres_pw@postgres/postgres_db
+      run: |
+        echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
+        mix coveralls.github
