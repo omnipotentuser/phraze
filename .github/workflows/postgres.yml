@@ -10,13 +10,13 @@ jobs:
     strategy:
       matrix:
         database_name:
-        - postgres
+        - postgres_db
         databaes_pw:
-        - postgres
+        - postgres_password
         database_port:
         - 5432
         database_user:
-        - postgres
+        - postgres_user
         database_hostname:
         - postgres
     # service containers to run with `postgres-job`
