@@ -24,7 +24,8 @@ jobs:
         - postgres_user
         database_hostname:
         - 127.0.0.1
-    container: elixir:${{matrix.elixir}}
+    container:
+      image: hexpm/elixir:1.13.3-erlang-24.1.7-debian-bullseye-20210902
     env:
       MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
