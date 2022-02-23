@@ -10,13 +10,13 @@ jobs:
     strategy:
       matrix:
         database_name:
-        - postgres
+        - postgres_db
         databaes_pw:
-        - postgres
+        - postgres_pw
         database_port:
         - 5432
         database_user:
-        - postgres
+        - postgres_user
         database_hostname:
         - postgres
     # service containers to run with `postgres-job`
@@ -54,7 +54,7 @@ jobs:
 
       # queries database with postgres client
       - name: Query database
-        run: psql -h postgres -d postgres -U postgres -c 'SELECT 1;'
+        run: psql -h ${{matrix.database_hostname}} -d ${{matrix.database_name}} -U ${{matrix.database_user}} -c 'SELECT 1;'
         env:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
