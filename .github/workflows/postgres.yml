@@ -29,13 +29,13 @@ jobs:
         # `POSTGRES_HOST` is `postgres`
         env:
           # optional (defaults to `postgres`)
-          POSTGRES_DB: postgres
+          POSTGRES_DB: ${{matrix.database_name}}
           # required
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{matrix.database_pw}}
           # optional (defaults to `5432`)
           POSTGRES_PORT: 5432
           # optional (defaults to `postgres`)
-          POSTGRES_USER: postgres
+          POSTGRES_USER: ${{matrix.database_user}}
         ports:
           # maps tcp port 5432 on service container to the host
           - 5432:5432
@@ -54,8 +54,8 @@ jobs:
 
       # queries database with postgres client
       - name: Query database
-        run: psql -h postgres -d postgres -U postgres -c 'SELECT 1;'
+        run: psql -h postgres -d ${{matrix.database_name}} -U ${{matrix.database_user}} -c 'SELECT 1;'
         env:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
-          PGPASSWORD: postgres
+          PGPASSWORD: ${{matrix.database_pw}}
