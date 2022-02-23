@@ -7,7 +7,18 @@ jobs:
     runs-on: ubuntu-latest
     # Docker Hub image that `postgres-job` executes in
     container: node:latest
-
+    strategy:
+      matrix:
+        database_name:
+        - postgres
+        databaes_pw:
+        - postgres
+        database_port:
+        - 5432
+        database_user:
+        - postgres
+        database_hostname:
+        - postgres
     # service containers to run with `postgres-job`
     services:
       # label used to access the service container
@@ -18,13 +29,13 @@ jobs:
         # `POSTGRES_HOST` is `postgres`
         env:
           # optional (defaults to `postgres`)
-          POSTGRES_DB: postgres_db
+          POSTGRES_DB: ${{matrix.database_name}}
           # required
-          POSTGRES_PASSWORD: postgres_password
+          POSTGRES_PASSWORD: ${{matrix.database_pw}}
           # optional (defaults to `5432`)
           POSTGRES_PORT: 5432
           # optional (defaults to `postgres`)
-          POSTGRES_USER: postgres_user
+          POSTGRES_USER: ${{matrix.database_user}}
         ports:
           # maps tcp port 5432 on service container to the host
           - 5432:5432
@@ -43,7 +54,7 @@ jobs:
 
       # queries database with postgres client
       - name: Query database
-        run: psql -h postgres -d postgres_db -U postgres_user -c 'SELECT 1;'
+        run: psql -h ${{matrix.database_hostname}} -d ${{matrix.database_name}} -U ${{matrix.database_name}} -c 'SELECT 1;'
         env:
           # postgress password is required; alternatively, you can run:
           # `PGPASSWORD=postgres_password psql ...`
