@@ -36,9 +36,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    env:
-      MIX_ENV: test
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Install PostgreSQL client
       run: |
