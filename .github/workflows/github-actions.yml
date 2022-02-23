@@ -9,7 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Phraze Build and Test OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
-    container: elixir:
     strategy:
       matrix:
         otp:
