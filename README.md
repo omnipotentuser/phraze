@@ -1,4 +1,4 @@
-[![Phraze Github Actions Test](https://github.com/omnipotentuser/phraze/actions/workflows/github-action.yml/badge.svg)](https://github.com/omnipotentuser/phraze/actions/workflows/github-action.yml)
+[![Phraze Test](https://github.com/omnipotentuser/phraze/actions/workflows/ci.yml/badge.svg)](https://github.com/omnipotentuser/phraze/actions/workflows/ci.yml)
 
 # Phraze
 
