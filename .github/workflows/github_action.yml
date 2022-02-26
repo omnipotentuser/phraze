@@ -36,6 +36,12 @@ jobs:
           elixir-version: ${{matrix.elixir}}
       - run: |
           apt-get install -y libssl-dev
+          apt-get install -y apt-utils
+          apt-get install -y build-essential
+          apt-get install -y inotify-tools
+      - run: mix local.hex --force
+      - run: mix archive.install --force hex phx_new 1.6.5
+      - run: mix local.rebar --force
       - run: mix deps.get
       - run: mix test
       - name: "Run ExCoveralls and generate HTML"
