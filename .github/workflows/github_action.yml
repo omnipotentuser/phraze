@@ -13,9 +13,24 @@ jobs:
         - 24.1.7
         elixir:
         - 1.13.3
+        pg:
+          - version: 9.4
+            skip_wal: skip_wal
+          - version: 9.5
+            skip_wal: skip_wal
+          - version: 9.6
+            skip_wal: skip_wal
+          - version: 10
+          - version: 11
+          - version: 12
+          - version: 13
     services:
       db:
-        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        image: postgres:${{ matrix.pg.version }}
         ports: ['5432:5432']
         env:
           POSTGRES_PASSWORD: postgres
@@ -24,7 +39,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
+    env:
+      MIX_ENV: test
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -43,6 +59,12 @@ jobs:
           restore-keys: ${{ runner.os }}-mix-
       - run: mix deps.get
       - run: mix test
+        env:
+          DATABASE_USERNAME: postgres
+          DATABASE_PASSWORD: postgres
       - name: "Run ExCoveralls and generate HTML"
+        env:
+          DATABASE_USERNAME: postgres
+          DATABASE_PASSWORD: postgres
         run: |
           mix coveralls.github
