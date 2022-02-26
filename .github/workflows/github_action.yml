@@ -30,18 +30,17 @@ jobs:
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - uses: actions/checkout@v2
-      - uses: actions/setup-elixir@v1
+      - name: Set up Elixir
+        uses: erlef/setup-beam@988e02bfe678367a02564f65ca2e37726dc0268f
         with:
-          otp-version: ${{matrix.otp}}
-          elixir-version: ${{matrix.elixir}}
-      - run: |
-          apt-get install -y libssl-dev
-          apt-get install -y apt-utils
-          apt-get install -y build-essential
-          apt-get install -y inotify-tools
-      - run: mix local.hex --force
-      - run: mix archive.install --force hex phx_new 1.6.5
-      - run: mix local.rebar --force
+          elixir-version: ${{ matrix.elixir}} # Define the elixir version [required]
+          otp-version: ${{ matrix.otp }} # Define the OTP version [required]
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
       - run: mix deps.get
       - run: mix test
       - name: "Run ExCoveralls and generate HTML"
