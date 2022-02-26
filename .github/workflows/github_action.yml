@@ -65,7 +65,7 @@ jobs:
           DATABASE_PASSWORD: postgres
           DATABASE_NAME: postgres
           DATABASE_HOSTNAME: postgres
-          DATABASE_PORT: ${{ job.services.postgres.ports['5432'] }}
+          DATABASE_PORT: ${{ job.services.db.ports['5432'] }}
           DATABASE_URL: ecto://postgres:postgres@postgres/postgres
       - name: "Run ExCoveralls and generate HTML"
         run: |
