@@ -56,10 +56,14 @@ jobs:
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-
       - run: mix deps.get
-      - run: mix test
+      - name:
+        run: |
+          mix test
+          echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_NAME }}, POSTGRES_PASSWORD = ${{ env.DATABASE_PASSWORD }}"
         env:
           DATABASE_USERNAME: postgres
           DATABASE_PASSWORD: postgres
+          DATABASE_URL: ecto://postgres:postgres@postgres/postgres
       - name: "Run ExCoveralls and generate HTML"
         run: |
           mix coveralls.github
