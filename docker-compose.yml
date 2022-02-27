@@ -1,9 +1,10 @@
 version: '3'
 services:
   signaler:
-    image: "phraze:${TAG}"
-    network_mode: "host"
+    image: phraze:${TAG} # may not be needed
+    network_mode: 'host'
     env_file:
-      - .env
-  # environment:
-  # - MIX_ENV=dev
+     - ./env_docker.env
+    image: 'phraze:latest'
+    # environment:
+      # - PORT=4040
