@@ -34,7 +34,7 @@ jobs:
       DATABASE_PASSWORD: postgres
       DATABASE_NAME: postgres
       DATABASE_HOSTNAME: localhost
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5432 # ${{ job.services.db.ports['5432'] }}
       DATABASE_URL: ecto://postgres:postgres@localhost/postgres
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
