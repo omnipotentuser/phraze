@@ -1,4 +1,4 @@
-name: Phraze Github Actions Test
+name: Phraze Test
 on:
   push:
     branches: [ master, github_actions ]
@@ -30,6 +30,13 @@ jobs:
           --health-retries 5
     env:
       MIX_ENV: test
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: postgres
+      DATABASE_HOSTNAME: localhost
+      DATABASE_PORT: ${{ job.services.db.ports['5432'] }}
+      DATABASE_URL: ecto://postgres:postgres@localhost/postgres
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -50,23 +57,6 @@ jobs:
       - name:
         run: |
           mix test
-          echo "Checking environment... POSTGRES_DB = ${{ env.DATABASE_URL }}"
-          echo "Checking hostname... `hostname`"
-        env:
-          DATABASE_USERNAME: postgres
-          DATABASE_PASSWORD: postgres
-          DATABASE_NAME: postgres
-          DATABASE_HOSTNAME: localhost
-          DATABASE_PORT: ${{ job.services.db.ports['5432'] }}
-          DATABASE_URL: ecto://postgres:postgres@localhost/postgres
       - name: "Run ExCoveralls and generate HTML"
         run: |
           mix coveralls.github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DATABASE_USERNAME: postgres
-          DATABASE_PASSWORD: postgres
-          DATABASE_NAME: postgres
-          DATABASE_HOSTNAME: localhost
-          DATABASE_PORT: ${{ job.services.db.ports['5432'] }}
-          DATABASE_URL: ecto://postgres:postgres@localhost/postgres
