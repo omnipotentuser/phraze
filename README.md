@@ -1,4 +1,5 @@
 [![Phraze Test](https://github.com/omnipotentuser/phraze/actions/workflows/ci.yml/badge.svg)](https://github.com/omnipotentuser/phraze/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/omnipotentuser/phraze/badge.svg)](https://coveralls.io/github/omnipotentuser/phraze)
 
 # Phraze
 
