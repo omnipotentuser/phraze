@@ -1,6 +1,7 @@
 version: '3'
 services:
   signaler:
+    image: phraze:${TAG} # may not be needed
     network_mode: 'host'
     env_file:
      - ./env_docker.env
