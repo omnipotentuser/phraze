@@ -5,6 +5,6 @@ services:
     network_mode: 'host'
     env_file:
      - ./env_docker.env
-    image: 'phraze:latest'
+    # image: 'phraze:latest'
     # environment:
       # - PORT=4040

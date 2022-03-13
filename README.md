@@ -48,10 +48,14 @@ To list all commands:
   * docker run --network=host -e phraze:latest
   * to use docker-compose, run `source .env` before running `docker-compose up`. You may set port or other environmental variables such as MIX_ENV.
 
-## Learn more
+## Fly.io
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+flyctl postgres create
+flyctl secrets set SECRET_KEY_BASE="....."
+flyctl secrets list
+flyctl launch
+flyctl postgres attach --postgres-app phrazedb
+flyctl deploy
+flyctl apps list
+flyctl apps destroy <name>
+

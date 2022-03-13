@@ -23,6 +23,7 @@ defmodule PhrazeWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
+  @spec connect(any, any, any) :: {:ok, any}
   def connect(_params, socket, _connect_info) do
     {:ok, socket}
   end
@@ -38,6 +39,7 @@ defmodule PhrazeWeb.UserSocket do
   #
   # Returning `nil` makes this socket anonymous.
   @impl true
+  @spec id(any) :: nil
   def id(_socket), do: nil
 
   #@impl true

@@ -1,17 +1,15 @@
-# fly.toml file generated for phraze-app on 2022-02-19T12:00:02-06:00
+# fly.toml file generated for phraze on 2022-03-07T21:51:14-06:00
 
-app = "phraze-app"
+app = "phraze"
 
-kill_signal = "SIGTERM"
+kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
-[deploy]
-  release_command = "/app/bin/migrate"
-
 [env]
-  PHX_HOST = "phraze-app.fly.dev"
-  PORT = "8080"
+
+# [deploy]
+#   release_command = "/app/bin/phraze eval Phraze.Release.migrate"
 
 [experimental]
   allowed_public_ports = []
