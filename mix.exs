@@ -35,6 +35,7 @@ defmodule Phraze.MixProject do
   def application do
     [
       mod: {Phraze.Application, []},
+      included_applications: [:fun_with_flags],
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -69,7 +70,7 @@ defmodule Phraze.MixProject do
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:fun_with_flags, "~> 1.8.0", runtime: false},
+      {:fun_with_flags, "~> 1.8.0"},
     ]
   end
 

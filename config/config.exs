@@ -8,7 +8,8 @@
 import Config
 
 config :phraze,
-  ecto_repos: [Phraze.Repo]
+  ecto_repos: [Phraze.Repo],
+  url: System.get_env("DATABASE_URL")
 
 # Configures the endpoint
 config :phraze, PhrazeWeb.Endpoint,
