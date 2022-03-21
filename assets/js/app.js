@@ -1,201 +1,246 @@
-// We import the CSS which is extracted to its own file by esbuild.
-// Remove this line if you add a your own CSS build pipeline (e.g postcss).
-import "../css/app.css"
+(async () => {
 
-// If you want to use Phoenix channels, run `mix help phx.gen.channel`
-// to get started and then uncomment the line below.
-// import "./user_socket.js"
-
-// You can include dependencies in two ways.
-//
-// The simplest option is to put them in assets/vendor and
-// import them using relative paths:
-//
-//     import "./vendor/some-package.js"
-//
-// Alternatively, you can `npm install some-package` and import
-// them using a path starting with the package name:
-//
-//     import "some-package"
-//
-
-// Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
-import "phoenix_html"
-// Establish Phoenix Socket and LiveView configuration.
-import {Socket} from "phoenix"
-import {LiveSocket} from "phoenix_live_view"
-import topbar from "../vendor/topbar"
-
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-
-var users = {}
-var localStream
-
-async function initStream() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: {frameRate: {min: 30}}});
-    localStream = stream;
-    document.getElementById("local-video").srcObject = stream
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-function addUserConnection(userUuid) {
-  if (users[userUuid] === undefined) {
-    users[userUuid] = {
-      peerConnection: null
+    // Start by creating a page to send room name
+    // set media after page completes rendering()
+    // receive offer or answer
+    // receive sdp or ice candidate
+    // https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
+    // let mediaConst = {
+    //  audio: true,
+    //  video: {
+    //    width: { ideal: 1280 },
+    //    height: { ideal: 720 }
+    //  }
+    // }
+    var mediaConst = { audio: true, video: {frameRate: {ideal: 30}} };
+    const offerOptions = {
+      offerToReceiveAudio: 1,
+      offerToReceiveVideo: 1
     }
-  }
+    var myUserId = null;
 
-  return users;
-}
+    async function createMedia(constraints){
+      console.log('setMedia')
+      let stream = null
 
-function removeUserConnection(userUuid) {
-  delete users[userUuid]
-
-  return users
-}
-
-function createPeerConnection(lv, fromUser, offer) {
-  let newPeerConnection = new RTCPeerConnection({
-    iceServers: [
-      { urls: "stun:phraze.app:3478" }
-    ]
-  })
-  users[fromUser].peerConnection = newPeerConnection;
-
-  // Add each local track to the RTCPeerConnection.
-  localStream.getTracks().forEach(track => newPeerConnection.addTrack(track, localStream))
-
-  // If creating an answer, rather than an initial offer.
-  if (offer !== undefined) {
-    newPeerConnection.setRemoteDescription({type: "offer", sdp: offer})
-    newPeerConnection.createAnswer()
-      .then((answer) => {
-        newPeerConnection.setLocalDescription(answer)
-        console.log("Sending this ANSWER to the requester:", answer)
-        lv.pushEvent("new_answer", {toUser: fromUser, description: answer})
-      })
-      .catch((err) => console.log(err))
-  }
-
-  newPeerConnection.onicecandidate = async ({candidate}) => {
-    // fromUser is the new value for toUser because we're sending this data back
-    // to the sender
-    lv.pushEvent("new_ice_candidate", {toUser: fromUser, candidate})
-  }
-
-  // Don't add the `onnegotiationneeded` callback when creating an answer due to
-  // a bug in Chrome.
-  if (offer === undefined) {
-    newPeerConnection.onnegotiationneeded = async () => {
       try {
-        newPeerConnection.createOffer()
-          .then((offer) => {
-            newPeerConnection.setLocalDescription(offer)
-            console.log("Sending this OFFER to the requester:", offer)
-            lv.pushEvent("new_sdp_offer", {toUser: fromUser, description: offer})
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        /* use the stream */
+        var video = document.getElementById('localVideo');
+        video.srcObject = stream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      } catch(err) {
+        /* handle the error */
+        console.log('unable to detect camera or meet constraints')
+        console.log(err.name + ": " + err.message);
+      }
+      return stream
+    }
+
+    var users = {}
+    var localStream = await createMedia(mediaConst)
+
+    function addUserConnection(fromUserId) {
+      if (users[fromUserId] === undefined) {
+        users[fromUserId] = {
+          peerConnection: null
+        }
+      }
+
+      return users;
+    }
+
+    function removeUserConnection() {
+      for (const [fromUserId, peerConnection] of Object.entries(users)) {
+        console.log(fromUserId, peerConnection);
+        if( document.getElementById(fromUserId) )
+          document.getElementById(fromUserId).remove()
+        delete users[fromUserId]
+      }
+    }
+
+    function createPeerConnection(sock, fromUserId, msg) {
+      let newPeerConnection = new RTCPeerConnection({
+        // using free stun server for dev
+        iceServers: [
+            { urls: "stun:bovav.com:3478" }
+        ]
+      })
+      users[fromUserId].peerConnection = newPeerConnection;
+
+      // Add each local track to the RTCPeerConnection.
+      localStream.getTracks().forEach(track => newPeerConnection.addTrack(track, localStream))
+
+      // If creating an answer, rather than an initial offer.
+      if (msg !== undefined) {
+        newPeerConnection.setRemoteDescription(msg)
+        newPeerConnection.createAnswer()
+          .then((answer) => {
+            newPeerConnection.setLocalDescription(answer)
+            console.log("Sending this ANSWER to the requester:", answer)
+
+            // Need to send message to server
+            var payload = {
+              action: "sdp",
+              fromUserId: myUserId,
+              description: answer
+            }
+            sock.send(
+              JSON.stringify(payload)
+            )
           })
           .catch((err) => console.log(err))
       }
-      catch (error) {
-        console.log(error)
+
+      newPeerConnection.onicecandidate = async ({candidate}) => {
+        // fromUser is the new value for toUser because we're sending this data back
+        // to the sender
+        var payload = {
+          action: "ice_candidate",
+          fromUserId: myUserId,
+          candidate
+        }
+        console.log("Sending ice candidate: ", payload)
+        sock.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      // This is called if remote peer joins the same room this peer resides in.
+      // Therefore this peer is considered the offerer, starting the process.
+      if (msg === undefined) {   
+        newPeerConnection.onnegotiationneeded = async () => {
+          try {
+            newPeerConnection.createOffer(offerOptions)
+              .then((sdp) => {
+                newPeerConnection.setLocalDescription(sdp)
+                console.log("Sending my offer SDP to remote peer:", sdp)
+                myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+                // socket sends the sdp offer generated from PeerConnectionRTC to other peers
+                // 
+                var payload = {
+                  action: "sdp",
+                  fromUserId: myUserId,
+                  description: sdp
+                }
+                sock.send(
+                  JSON.stringify(payload)
+                )
+              })
+              .catch((err) => console.log(err))
+          }
+          catch (error) {
+            console.log(error)
+          }
+        }
+      }
+
+      newPeerConnection.addEventListener('track', event => {
+        console.log("Track received:", event)
+        console.log("stream id", event.streams[0].id)
+        if( videoElement = document.getElementById(`video-remote-${fromUserId}`)){
+          console.log(`video-remote-${fromUserId} already created.`)
+          if (videoElement.srcObject !== event.streams[0]){
+            videoElement.srcObject = event.streams[0]
+            console.log(`video-remote-${fromUserId} adding another remote stream.`)
+          }
+        } else {
+          console.log(`creating remove video-remote-${fromUserId}`)
+          let videoElement = document.createElement("video")
+          videoElement.setAttribute("id",`video-remote-${fromUserId}`)
+          videoElement.setAttribute("class", "rtcvideo")
+          videoElement.setAttribute("autoplay", true)
+          videoElement.setAttribute("playsinline", true)
+          document.getElementById("remoteLayout").append(videoElement)
+          videoElement.srcObject = event.streams[0]
+        }
+      })
+
+      return newPeerConnection;
+    }
+
+    class rtcSocketHandler {
+      setupSocket() {
+        this.socket = new WebSocket("ws://localhost:1337/ws/signaler")
+  
+        this.socket.addEventListener("message", (event) => {
+
+          if( event.data === 'ok' ) {
+            console.log("Message successfully sent")
+            return
+          }
+
+          try {
+            var payload = JSON.parse(event.data);
+          } catch (e) {
+            console.log(`${event.data} is not a json format: ${e}`)
+            return
+          }
+
+          console.log("JSON parsed:", payload)
+
+          var fromUserId = payload.fromUserId
+          addUserConnection(fromUserId)
+
+          if (typeof payload.type !== "undefined" && payload.type === 'create_offer'){
+            // Tells webrtc to begin with an offer
+            createPeerConnection(this.socket, fromUserId)
+          } else if (payload.action === 'sdp'){
+            // begin the process of PeerConnection creating answer type SDP
+            if (payload.description.type === 'offer'){
+              createPeerConnection(this.socket, fromUserId, payload.description)
+            } else {
+              // Received type answer SDP from remote peer. Now digest the SDP.
+              let peerConnection = users[fromUserId].peerConnection
+              if (payload.description != "") {
+                peerConnection.setRemoteDescription(payload.description)
+              }
+            }
+          } else if (payload.action === "ice_candidate") {
+            let fromUser = payload.fromUserId
+            let peerConnection = users[fromUser].peerConnection      
+            peerConnection.addIceCandidate(payload.candidate)
+          }
+        })
+  
+        this.socket.addEventListener("close", () => {
+          this.setupSocket()
+        })
+      }
+  
+      // sends the room name to join
+      // at this point, we are starting clean
+      submit(event) {
+        event.preventDefault()
+
+        const input = document.getElementById("message")
+        const message = input.value
+        input.value = ""
+
+        // need to iterate and delete each remote peer
+        removeUserConnection()
+
+        // room is not in use, but to demonstrate how we might begin building
+        // concurrent calls by joining a room.
+        // ideally we'd use a uuid library, but for now,...
+        myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+        var payload = {
+          action: "join",
+          room: input.value,
+          fromUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
       }
     }
+  
+    const rtcSocketClass = new rtcSocketHandler()
+    rtcSocketClass.setupSocket()
+    
+    document.getElementById("button")
+      .addEventListener("click", (event) => rtcSocketClass.submit(event))
   }
-
-  newPeerConnection.ontrack = async (event) => {
-    console.log("Track received:", event)
-    document.getElementById(`video-remote-${fromUser}`).srcObject = event.streams[0]
-  }
-
-  return newPeerConnection;
-}
-
-let Hooks = {}
-Hooks.JoinCall = {
-  mounted () {
-    initStream()
-  }
-}
-
-Hooks.HandleOfferRequest = {
-  mounted () {
-    console.log("new offer request from", this.el.dataset.fromUserUuid)
-    let fromUser = this.el.dataset.fromUserUuid
-
-    createPeerConnection(this, fromUser)
-  }
-}
-
-Hooks.HandleIceCandidateOffer = {
-  mounted () {
-    let data = this.el.dataset
-    let fromUser = data.fromUserUuid
-    let iceCandidate = JSON.parse(data.iceCandidate)
-    let peerConnection = users[fromUser].peerConnection
-
-    console.log("new ice candidate from", fromUser, iceCandidate)
-
-    peerConnection.addIceCandidate(iceCandidate)
-  }
-}
-
-Hooks.HandleSdpOffer = {
-  mounted () {
-    let data = this.el.dataset
-    let fromUser = data.fromUserUuid
-    let sdp = data.sdp
-
-    if (sdp != "") {
-      console.log("new sdp OFFER from", data.fromUserUuid, data.sdp)
-
-      createPeerConnection(this, fromUser, sdp)
-    }
-  }
-}
-
-Hooks.HandleAnswer = {
-  mounted () {
-    let data = this.el.dataset
-    let fromUser = data.fromUserUuid
-    let sdp = data.sdp
-    let peerConnection = users[fromUser].peerConnection
-
-    if (sdp != "") {
-      console.log("new sdp ANSWER from", fromUser, sdp)
-      peerConnection.setRemoteDescription({type: "answer", sdp: sdp})
-    }
-  }
-}
-
-Hooks.InitUser = {
-  mounted () {
-    addUserConnection(this.el.dataset.userUuid)
-  },
-
-  destroyed () {
-    removeUserConnection(this.el.dataset.userUuid)
-  }
-}
-
-let liveSocket = new LiveSocket("/live", Socket, {hooks: Hooks, params: {_csrf_token: csrfToken}})
-
-
-// old
-// let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
-
-// Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", info => topbar.show())
-window.addEventListener("phx:page-loading-stop", info => topbar.hide())
-
-// connect if there are any LiveViews on the page
-liveSocket.connect()
-
-// expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
-// >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
-// >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
+)()
