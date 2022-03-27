@@ -14,11 +14,13 @@ defmodule Phraze.Application do
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
       Plug.Cowboy.child_spec(
-        scheme: :http,
+        scheme: :https,
         plug: Phraze.Router,
         options: [
           dispatch: dispatch(),
-          port: 1337
+          port: 1337,
+          certfile: "/etc/letsencrypt/live/bovav.com/fullchain.pem",
+          keyfile: "/etc/letsencrypt/live/bovav.com/fullchain.pem",
         ]
       ),
       Registry.child_spec(
