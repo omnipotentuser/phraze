@@ -10,20 +10,12 @@ defmodule Phraze.Application do
     children = [
       # Start the Ecto repository
       Phraze.Repo,
-      # Start the Telemetry supervisor
-      PhrazeWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Phraze.PubSub},
-      # Start the Endpoint (http/https)
-      PhrazeWeb.Presence,
-      PhrazeWeb.Endpoint,
-      PhrazeWeb.Stun,
       FunWithFlags.Supervisor,
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
       Plug.Cowboy.child_spec(
         scheme: :http,
-        plug: PhrazeWeb.Router,
+        plug: Phraze.Router,
         options: [
           dispatch: dispatch(),
           port: 1337
@@ -41,20 +33,12 @@ defmodule Phraze.Application do
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
-  @impl true
-  def config_change(changed, _new, removed) do
-    PhrazeWeb.Endpoint.config_change(changed, removed)
-    :ok
-  end
-
   defp dispatch do
     [
       {:_,
         [
-          {"/ws/signaler", Phraze.SocketHandler, []}
-          # {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
+          {"/ws/signaler", Phraze.SocketHandler, []},
+          {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
         ]
       }
     ]
