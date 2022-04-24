@@ -1,2 +1,4 @@
+# File: assertion_test.exs
+
+# 1) Start ExUnit.
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Phraze.Repo, :manual)

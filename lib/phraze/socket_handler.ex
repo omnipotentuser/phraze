@@ -23,26 +23,37 @@ defmodule Phraze.SocketHandler do
     IO.puts("received message: #{message}")
     IO.inspect(message)
     IO.puts("typeof message: #{typeof(message)}")
-    if message == "ping" do
-      IO.puts("ping pong")
-      Process.send(self(), "pong", [])
-    else
-      Registry.Phraze
-      |> Registry.dispatch(
+    handle_msg(message, state)
+    {:reply, {:text, "ok"}, state}
+  end
 
-        state.registry_key, fn(entries) ->
 
-          IO.puts("Typeof entries: #{typeof(entries)}")
-          IO.inspect(entries)
-          for {pid, _} <- entries do
-            if pid != self() do
-              cmd(message, pid)
-            end
+  def handle_msg("ping" = message) do
+    IO.puts("#{message} pong")
+    {:ok, "pong"}
+    #Process.send(self(), "pong", [])
+  end
+
+  def handle_msg("ping" = message, _state) do
+    IO.puts("#{message} pong")
+    Process.send(self(), "pong", [])
+  end
+
+  def handle_msg(message, state) do
+    Registry.Phraze
+    |> Registry.dispatch(
+
+      state.registry_key, fn(entries) ->
+
+        IO.puts("Typeof entries: #{typeof(entries)}")
+        IO.inspect(entries)
+        for {pid, _} <- entries do
+          if pid != self() do
+            cmd(message, pid)
           end
         end
-      )
-    end
-    {:reply, {:text, "ok"}, state}
+      end
+    )
   end
 
   def websocket_info(info, state) do
@@ -58,10 +69,7 @@ defmodule Phraze.SocketHandler do
   def cmd(msg, pid) do
     payload = Jason.decode!(msg)
     action = payload["action"]
-    IO.puts("Sending #{action} to")
-    IO.inspect(pid)
-    IO.puts("from")
-    IO.inspect(self())
+    IO.puts("Sending #{action} to #{inspect(pid)} from #{inspect(self())}")
     case action do
       "join" ->
         # Ideally, in the future we keep track of rooms and the uuid
@@ -81,6 +89,7 @@ defmodule Phraze.SocketHandler do
         "Unknown action #{action}"
     end
   end
+
   defp typeof(a) do
     cond do
         is_float(a)    -> "float"

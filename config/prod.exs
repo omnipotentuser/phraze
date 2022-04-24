@@ -8,3 +8,21 @@ config :phraze, Phraze.Repo,
   pool_size: System.get_env("DATABASE_POOL_SIZE") || 10,
   database: System.get_env("DATABASE_NAME"),
   url: System.get_env("DATABASE_URL")
+
+config :phraze, scheme: :https
+
+dispatch = [
+  _: [
+    {"/ws/signaler", Phraze.SocketHandler, []},
+    {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
+  ]
+]
+
+config :phraze, :cowboy,
+  network_info: [
+    port: 1337,
+    dispatch: dispatch,
+    otp_app: :phraze,
+    certfile: "/etc/letsencrypt/live/bovav.com/fullchain.pem",
+    keyfile: "/etc/letsencrypt/live/bovav.com/fullchain.pem"
+  ]

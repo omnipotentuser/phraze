@@ -4,7 +4,7 @@ defmodule Phraze.MixProject do
   def project do
     [
       app: :phraze,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
@@ -80,8 +80,7 @@ defmodule Phraze.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end

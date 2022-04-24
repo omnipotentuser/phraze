@@ -19,3 +19,18 @@ config :phraze, Phraze.Mailer, adapter: Swoosh.Adapters.Test
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+config :phraze, scheme: :http
+
+dispatch = [
+  _: [
+    {"/ws/signaler", Phraze.SocketHandler, []},
+    {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
+  ]
+]
+
+config :phraze, :cowboy,
+  network_info: [
+    port: 1337,
+    dispatch: dispatch
+  ]

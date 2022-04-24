@@ -11,12 +11,12 @@
         }
         </style>
         <title>
-            Green Lion
+            Agent 1337
         </title>
     </head>
     <body>
         <form>
-            <input id="message" type="text" placeholder="room name">
+            <input id="room_name" type="text" placeholder="room name">
             <br>
             <br>
             <input type="submit" value="connect" id="button">

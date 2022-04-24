@@ -215,7 +215,7 @@
       submit(event) {
         event.preventDefault()
 
-        const input = document.getElementById("message")
+        const input = document.getElementById("room_name")
         const message = input.value
         input.value = ""
 
