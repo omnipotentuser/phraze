@@ -1,4 +1,8 @@
-defmodule Phraze.SocketHandler do
+defmodule Phraze.Signaler do
+
+  @moduledoc """
+  Signaler for listening to websocket connections and handling messages
+  """
   @behaviour :cowboy_websocket
 
   def init(request, _state) do

@@ -1,10 +1,15 @@
 defmodule WebsocketTest do
+  @moduledoc """
+    Websocket Test
+  """
+
   # 3) Note that we pass "async: true", this runs the test case
   #    concurrently with other test cases. The individual tests
   #    within each test case are still run serially.
   use ExUnit.Case, async: true
 
-  import Phraze.SocketHandler
+  # alias Phraze.Signaler, as: Signaler
+  import Phraze.Signaler
 
   test "ping" do
     assert {:ok, "pong"} = handle_msg("ping")
@@ -14,4 +19,5 @@ defmodule WebsocketTest do
   test "the truth" do
     assert 2 = 1 + 1
   end
+
 end

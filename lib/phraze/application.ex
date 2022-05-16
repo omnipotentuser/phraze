@@ -15,6 +15,7 @@ defmodule Phraze.Application do
       # Start the Ecto repository
       Phraze.Repo,
       FunWithFlags.Supervisor,
+      # Phraze.AcdController,
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
       Plug.Cowboy.child_spec(

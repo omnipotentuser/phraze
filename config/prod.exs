@@ -13,7 +13,7 @@ config :phraze, scheme: :https
 
 dispatch = [
   _: [
-    {"/ws/signaler", Phraze.SocketHandler, []},
+    {"/ws/signaler", Phraze.Signaler, []},
     {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
   ]
 ]
