@@ -14,18 +14,23 @@ config :phraze, Phraze.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 10
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
-config :phraze, PhrazeWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
-  secret_key_base: "hueNtXR/9ab6IlUc/puwaf9XWJJv84amla//4kqHkehot2ZDd82k06FEKcncmxX8",
-  server: false
-
 # In test we don't send emails.
 config :phraze, Phraze.Mailer, adapter: Swoosh.Adapters.Test
 
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-# Initialize plugs at runtime for faster test compilation
-config :phoenix, :plug_init_mode, :runtime
+config :phraze, scheme: :http
+
+dispatch = [
+  _: [
+    {"/ws/signaler", Phraze.Signaler, []},
+    {:_, Plug.Cowboy.Handler, {Phraze.Router, []}}
+  ]
+]
+
+config :phraze, :cowboy,
+  network_info: [
+    port: 1337,
+    dispatch: dispatch
+  ]

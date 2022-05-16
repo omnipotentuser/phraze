@@ -1,9 +1,10 @@
 defmodule Phraze.MixProject do
+
   use Mix.Project
   def project do
     [
       app: :phraze,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
@@ -49,21 +50,16 @@ defmodule Phraze.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.6.0"},
-      {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.16.0"},
       {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.5"},
-      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
+      {:cowboy, "~> 2.9"},
+      {:plug, "~> 1.12"},
       {:plug_cowboy, "~> 2.5"},
       {:uuid, "~> 1.1"},
       {:stun, "~> 1.0"},
@@ -84,9 +80,7 @@ defmodule Phraze.MixProject do
     [
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end

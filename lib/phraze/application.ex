@@ -5,35 +5,35 @@ defmodule Phraze.Application do
 
   use Application
 
+  require Logger
+
   @impl true
   def start(_type, _args) do
+    scheme = Application.get_env(:phraze, :scheme)
+    options = Application.get_env(:phraze, :cowboy)
     children = [
       # Start the Ecto repository
       Phraze.Repo,
-      # Start the Telemetry supervisor
-      PhrazeWeb.Telemetry,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Phraze.PubSub},
-      # Start the Endpoint (http/https)
-      PhrazeWeb.Presence,
-      PhrazeWeb.Endpoint,
-      PhrazeWeb.Stun,
       FunWithFlags.Supervisor,
+      # Phraze.AcdController,
       # Start a worker by calling: Phraze.Worker.start_link(arg)
       # {Phraze.Worker, arg}
+      Plug.Cowboy.child_spec(
+        scheme: scheme,
+        plug: Phraze.Router,
+        options: options[:network_info]
+      ),
+      Registry.child_spec(
+        keys: :duplicate,
+        name: Registry.Phraze
+      )
     ]
+
+    Logger.info("Application started, using #{scheme}.")
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Phraze.Supervisor]
     Supervisor.start_link(children, opts)
-  end
-
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
-  @impl true
-  def config_change(changed, _new, removed) do
-    PhrazeWeb.Endpoint.config_change(changed, removed)
-    :ok
   end
 end

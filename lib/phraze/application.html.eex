@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script type="application/javascript" defer="defer" src="js/application.js"></script>
+        <style>
+        .rtcvideo {
+            background-color: black;
+            width: 352px;
+            height: 240px;
+        }
+        </style>
+        <title>
+            Agent 1337
+        </title>
+    </head>
+    <body>
+        <form>
+            <input id="room_name" type="text" placeholder="room name">
+            <br>
+            <br>
+            <input type="submit" value="connect" id="button">
+        </form>
+        <div id="mediaLayout">
+            <main id="localLayout" width="352" height="240">
+                <video id="localVideo" class="rtcvideo" playsinline autoplay muted>
+                </video>
+            </main>
+            <div id="remoteLayout">
+            </div>
+        </div>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js">
+    </body>
+</html>
