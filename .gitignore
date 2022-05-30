@@ -38,4 +38,4 @@ npm-debug.log
 
 # local environment for production
 .env
-env-docker.sh
+./env-docker.sh
