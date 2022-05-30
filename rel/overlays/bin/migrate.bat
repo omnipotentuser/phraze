@@ -1,1 +1,0 @@
-call "%~dp0\phraze" eval Phraze.Release.migrate
