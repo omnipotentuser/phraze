@@ -8,7 +8,7 @@ defmodule WebsocketTest do
   #    within each test case are still run serially.
   use ExUnit.Case, async: true
 
-  alias Phraze.TestWebsocketClient, as: WebsocketClient
+  alias Phraze.TestWebsocketClient, as: Wsclient
 
   # alias Phraze.Signaler, as: Signaler
   import Phraze.Signaler
