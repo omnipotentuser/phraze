@@ -33,7 +33,7 @@ defmodule Phraze.Signaler do
 
 
   def handle_msg("ping" = message) do
-    IO.puts("#{message} pong")
+    IO.puts("arity 1 #{message} pong")
     {:ok, "pong"}
     #Process.send(self(), "pong", [])
   end
