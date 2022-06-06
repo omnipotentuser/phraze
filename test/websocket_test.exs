@@ -10,31 +10,41 @@ defmodule WebsocketTest do
 
   alias Phraze.TestWebsocketClient, as: TestClient
 
+  @wait_period 20
+
   setup do
     url = "ws://localhost:1337/ws/signaler"
-    {:ok, pidA} = TestClient.start_link(url, [])
-    {:ok, pidB} = TestClient.start_link(url, [])
-    [pidA: pidA, pidB: pidB, url: url]
+    {:ok, pid_a} = TestClient.start_link(url, [])
+    # [pid_a: pid_a, url: url]
+    {:ok, pid_b} = TestClient.start_link(url, [])
+    [pid_a: pid_a, pid_b: pid_b, url: url]
   end
 
   describe "handle_cast callback" do
-    # test "is called", context do
-    #   WebSockex.send_frame(context.pid, {:pid_reply})
-
-    #   assert_receive :cast
-    # end
-
-    # test "can reply with a message", context do
-    #   message = :erlang.term_to_binary(:cast_msg)
-    #   TestClient.cast(context.pid, {:send, {:binary, message}})
-
-    #   assert_receive :cast_msg
-    # end
 
     test "send ping and receive pong", context do
-      WebSockex.send_frame(context.pidA, {:text, "ping"})
-      assert_receive "pong"
+
+      assert :ok = TestClient.send_client(context.pid_a, "ping")
+      Process.sleep @wait_period
+      msg = TestClient.get_state(context.pid_a)
+      assert ["pong"] = msg
+
     end
+
+    test "send sdp", context do
+
+      rand_num = :rand.uniform(1000)
+      payload = %{
+        action: "sdp",
+        fromUserId: rand_num,
+        description: "m=video 9 UDP/TLS/RTP/SAVPF 96 125 97 126"
+      }
+      assert :ok = TestClient.send_client(context.pid_a, Jason.encode!(payload))
+      Process.sleep @wait_period
+      msg = TestClient.get_state(context.pid_b)
+      assert [payload] == msg
+    end
+
   end
 
   # test "websockex connection returns a new PID" do

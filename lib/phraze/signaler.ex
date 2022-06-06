@@ -33,7 +33,7 @@ defmodule Phraze.Signaler do
 
 
   def handle_msg("ping" = message) do
-    IO.puts("arity 1 #{message} pong")
+    IO.puts("arity/1 #{message} pong")
     {:ok, "pong"}
     #Process.send(self(), "pong", [])
   end
@@ -61,7 +61,7 @@ defmodule Phraze.Signaler do
   end
 
   def websocket_info(info, state) do
-    IO.puts("websocket_info #{info}")
+    IO.puts("websocket_info #{info} #{inspect state}")
     {:reply, {:text, info}, IO.inspect(state)}
   end
 
