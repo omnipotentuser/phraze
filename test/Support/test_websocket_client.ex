@@ -38,7 +38,7 @@ defmodule Phraze.TestWebsocketClient do
     {:ok, state}
   end
 
-  def handle_frame({:text, msg}, state) when is_bitstring(msg) and msg != "pong" and msg != "ok" do
+  def handle_frame({:text, msg}, state) when is_bitstring(msg) do
     IO.puts "Received text - Message: #{inspect msg}, state - #{inspect state}"
     {:ok, payload} = Jason.decode(msg, keys: :atoms)
     state = state ++ [payload]

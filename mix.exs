@@ -1,10 +1,11 @@
 defmodule Phraze.MixProject do
 
   use Mix.Project
+
   def project do
     [
       app: :phraze,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
