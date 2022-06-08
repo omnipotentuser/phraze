@@ -1,10 +1,11 @@
 defmodule Phraze.MixProject do
 
   use Mix.Project
+
   def project do
     [
       app: :phraze,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
@@ -37,12 +38,12 @@ defmodule Phraze.MixProject do
     [
       mod: {Phraze.Application, []},
       included_applications: [:fun_with_flags],
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :crypto]
     ]
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/Support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
