@@ -2,6 +2,25 @@ defmodule Phraze.Acd.Vri.Agent do
   @moduledoc """
   A queue for the interpreter agent to sit in until a request comes in to invite
   the interpreter into the vri session
+
+
+
+
+
+
+  +++ Need to update +++
+
+  the interpreter agent needs to store a new socket pid sent from the acd router
+  here. Within this agent module carries a state that consists of a structure as
+  defined like:
+
+  [ %{:uuid, :gender, :max_duration_idle, :status}, ...]
+
+
+
+
+
+
   """
   use GenServer, restart: :transient
   require Logger
