@@ -5,6 +5,8 @@ defmodule Phraze.Signaler do
   """
   @behaviour :cowboy_websocket
 
+  require Logger
+
   def init(request, _state) do
     state = %{registry_key: request.path}
 
@@ -13,19 +15,13 @@ defmodule Phraze.Signaler do
   end
 
   def websocket_init(state) do
-    IO.inspect(state)
-    IO.puts("BEFORE Registry.Phraze.............")
     Registry.Phraze
-    |> IO.inspect()
     |> Registry.register(state.registry_key, {})
-    IO.inspect(self())
-    IO.puts("AFTER.............")
     {:ok, state}
   end
 
   def websocket_handle({:text, message}, state) do
     IO.puts("received message: #{message}")
-    IO.inspect(message)
     IO.puts("typeof message: #{typeof(message)}")
     handle_msg(message, state)
     {:reply, {:text, "ok"}, state}
@@ -43,7 +39,34 @@ defmodule Phraze.Signaler do
     Process.send(self(), "pong", [])
   end
 
+  # First, parse message and find room name, then collect the pids for the
+  # matching room names.
+
+  # Second, depending on user type such as if it is a patron, assign the info
+  # to waiting queue, else if type is an interpreter, into a vrs queue. The
+  # info may be a struct keyword that consists pid, room name, and uuid
+  # (myUserId) along any other values in the future. This info needs to be
+  # stored in another Registry that references to the genserver where the
+  # queue is to be found.
+
+  # Third, if type patron was connected and joined to waiting queue, shift the
+  # next interpreter from the interpreter queue and shift the patron from
+  # waiting queue into the named room.
+
+  # Fourth, once the named room is generated with at least two users inside,
+  # begin the negotiation steps.
   def handle_msg(message, state) do
+
+    action = get_action(message)
+    case action do
+      "join" ->
+        Logger.print("Find out the type of user that is connecting")
+      _ ->
+        "unknown action #{action}"
+    end
+
+
+    # This needs to be moved to patron and interpreter queue registries instead
     Registry.Phraze
     |> Registry.dispatch(
 
@@ -53,7 +76,7 @@ defmodule Phraze.Signaler do
         IO.inspect(entries)
         for {pid, _} <- entries do
           if pid != self() do
-            cmd(message, pid)
+            send_to(message, pid)
           end
         end
       end
@@ -70,10 +93,14 @@ defmodule Phraze.Signaler do
     :ok
   end
 
-  def cmd(msg, pid) do
-    payload = Jason.decode!(msg)
-    action = payload["action"]
-    IO.puts("Sending #{action} to #{inspect(pid)} from #{inspect(self())}")
+  defp get_action(msg) do
+    Jason.decode!(msg, [{:atoms}])
+    |> Enum.get(:action)
+  end
+
+  defp send_to(payload, pid) do
+    IO.puts("Sending #{payload.action} to #{inspect(pid)} from #{inspect(self())}")
+    action = payload.action
     case action do
       "join" ->
         # Ideally, in the future we keep track of rooms and the uuid
@@ -86,9 +113,9 @@ defmodule Phraze.Signaler do
         })
         Process.send(pid, offer, [])
       "sdp" ->
-        Process.send(pid, msg, [])
+        Process.send(pid, Jason.encode(payload), [])
       "ice_candidate" ->
-        Process.send(pid, msg, [])
+        Process.send(pid, Jason.encode(payload), [])
       _ ->
         "Unknown action #{action}"
     end

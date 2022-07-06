@@ -46,21 +46,20 @@ defmodule WebsocketTest do
     end
 
     test "send ice_candidates", context do
-      Enum.map(1..10, fn x ->
+      1..10
+      |> Enum.map(fn x ->
         rand_num = :rand.uniform(1000)
-        payload = %{
-          action: "ice_candidate",
-          fromUserId: rand_num,
-          description: "a=candidate:4234997325 #{x} udp 2043278322 192.168.0.56 44323 typ host"
-        }
+          payload = %{
+            action: "ice_candidate",
+            fromUserId: rand_num,
+            description: "a=candidate:4234997325 #{x} udp 2043278322 192.168.0.56 44323 typ host"
+          }
 
-        assert :ok = TestClient.send_client(context.pid_a, Jason.encode!(payload))
-        Process.sleep @wait_period
-        msg = TestClient.get_state(context.pid_b)
-        assert [payload] == msg
+          assert :ok = TestClient.send_client(context.pid_a, Jason.encode!(payload))
+          Process.sleep @wait_period
+          msg = TestClient.get_state(context.pid_b)
+          assert [payload] == msg
       end)
-
-
     end
 
   end

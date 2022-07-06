@@ -12,12 +12,8 @@ defmodule Phraze.Application do
     scheme = Application.get_env(:phraze, :scheme)
     options = Application.get_env(:phraze, :cowboy)
     children = [
-      # Start the Ecto repository
       Phraze.Repo,
       FunWithFlags.Supervisor,
-      # Phraze.AcdController,
-      # Start a worker by calling: Phraze.Worker.start_link(arg)
-      # {Phraze.Worker, arg}
       Plug.Cowboy.child_spec(
         scheme: scheme,
         plug: Phraze.Router,
