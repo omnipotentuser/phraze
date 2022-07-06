@@ -1,8 +1,7 @@
-defmodule Phraze.Acd.VriPatron do
+defmodule Phraze.Acd.Vrs.Agent do
   @moduledoc """
-  The VRS agent queue.
-
-  A struct gets defined that carries the particular state based on type of client connected.
+  A queue for the interpreter agent to sit in until a request comes in to invite
+  the interpreter VRS agent into the session
   """
   use GenServer, restart: :transient
   require Logger

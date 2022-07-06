@@ -1,23 +1,9 @@
-defmodule Phraze.Acd.VrsAgent do
+defmodule Phraze.Acd.Vrs.Patron do
   @moduledoc """
-  The VRS agent queue.
-
-  A struct gets defined that carries the particular state based on type of client connected.
+  A waiting room for the Patron to stay at until next vrs interpreter agent is
+  available to take the request
   """
-  use GenServer, restart: :transient
-  require Logger
-
-  @doc """
-  uuid gets generated from the client, and is required
-  gender defaults to none
-  max_duration defaults to 2 hours, or 120 minutes
-  status has ready, break, block, transfer
-  ready - agent is ready to be selected
-  break - agent is on a break and not accepting requests
-  block - agent is being blocked processing being terminated or in a bad state, or reported to admin
-  transfer - agent is being transferred to another queue or to a session
-  """
-  defstruct [:uuid, gender: "none", max_duration: 120, status: "ready"]
+  use GenServer
 
   def start_link(_) do
     IO.puts("Starting ACD Controller")

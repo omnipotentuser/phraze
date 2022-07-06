@@ -1,18 +1,22 @@
-defmodule Phraze.Acd.VrsPatron do
+defmodule Phraze.Acd.Vri.Agent do
   @moduledoc """
-  ACD Controller acts as a layer between the Signaler and the ACDs. for ACDs that gets created during runtime.
-  For each ACD client, the Controller keeps a list in the Registry. The controller is responsible for
-  ensuring the ACD clients are supervised and allows for the signaling layer to have access .
-
-  At start of the runtime the supervisor adds the ACD Controller then the Controller begins spawning
-  a list of ACDs based on the list that already exists in the database. In the case that the supervisor detects a crash,
-  the Controller becomes aware and checks the database for those ACDs then regenerates and checks with the signaler and
-  synchronizes the ACD data back into the Registry with same information that was being held before the crash.
-
-
-  The ACD Controller creates and destroys ACD processes as well as ensure that the ACDs are always available.
+  A queue for the interpreter agent to sit in until a request comes in to invite
+  the interpreter into the vri session
   """
-  use GenServer
+  use GenServer, restart: :transient
+  require Logger
+
+  @doc """
+  uuid gets generated from the client, and is required
+  gender defaults to none
+  max_duration defaults to 2 hours, or 120 minutes
+  status has ready, break, block, transfer
+  ready - agent is ready to be selected
+  break - agent is on a break and not accepting requests
+  block - agent is being blocked processing being terminated or in a bad state, or reported to admin
+  transfer - agent is being transferred to another queue or to a session
+  """
+  defstruct [:uuid, gender: "none", max_duration: 120, status: "ready"]
 
   def start_link(_) do
     IO.puts("Starting ACD Controller")
