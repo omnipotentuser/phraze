@@ -10,7 +10,7 @@ defmodule Phraze.Acd.Vri.Agent do
 
   +++ Need to update +++
 
-  the interpreter agent needs to store a new socket pid sent from the acd router
+  the interpreter agent needs to store a new socket pid sent from the acd dispatcher
   here. Within this agent module carries a state that consists of a structure as
   defined like:
 
