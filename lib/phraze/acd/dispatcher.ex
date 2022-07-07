@@ -1,6 +1,6 @@
 defmodule Phraze.Acd.Dispatcher do
   @moduledoc """
-  The ACD Dispatcher acts as a layer between the Signaler and the call queues for
+  The ACD Dispatcher acts as a layer between the Signaler and the registrars and queues for
   clients that join and make call requests. The Dispatcher is responsible placing
   Socket PIDs that gets created from the cowboy_websocket into the appropriate
   queue or registry for preserving the connection and its state.
