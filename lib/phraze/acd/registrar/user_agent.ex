@@ -1,22 +1,22 @@
-defmodule Phraze.Acd.Patron do
+defmodule Phraze.Acd.Registrar.UserAgent do
   @moduledoc """
-  Patron socket pid gets added to the Patron registry. The patron then becomes
+  Patron socket pid gets added to the User Agent registry. The patron then becomes
   available for creating new call requests or receive calls.
 
   A Registry needs to be added to Applications Supervisor and linked. If the pid
   crashes then the socket has to reconnect and be added back to the new registry
   pid.
 
-  Once a patron creates a call to vri or some other service, the router moves
+  Once a patron creates a call to vri or some other service, the dispatcher moves
   the pid of the patron to the target queue, such as VriPatron queue. If it is a
-  simple p2p connection, then the router creates a new session and pulls the
+  simple p2p connection, then the dispatcher creates a new session and pulls the
   patrons into the session room and begins the negotiation.
   """
   use GenServer
   require Logger
 
   def register(%{pid: _pid, uuid: _uuid, device: _device}) do
-    IO.puts("ACD Router create new vri patron acd process from ACD module")
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
     #GenServer.cast(__MODULE__, {:put, key})a sessi
     {:ok}
   end
