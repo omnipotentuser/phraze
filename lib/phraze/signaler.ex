@@ -10,7 +10,7 @@ defmodule Phraze.Signaler do
   def init(request, _state) do
     state = %{registry_key: request.path}
 
-    IO.puts("init #{state.registry_key}")
+    IO.puts("Signaler init #{self()}")
     {:cowboy_websocket, request, state}
   end
 
@@ -39,28 +39,13 @@ defmodule Phraze.Signaler do
     Process.send(self(), "pong", [])
   end
 
-  # First, parse message and find room name, then collect the pids for the
-  # matching room names.
-
-  # Second, depending on user type such as if it is a patron, assign the info
-  # to waiting queue, else if type is an interpreter, into a vrs queue. The
-  # info may be a struct keyword that consists pid, room name, and uuid
-  # (myUserId) along any other values in the future. This info needs to be
-  # stored in another Registry that references to the genserver where the
-  # queue is to be found.
-
-  # Third, if type patron was connected and joined to waiting queue, shift the
-  # next interpreter from the interpreter queue and shift the patron from
-  # waiting queue into the named room.
-
-  # Fourth, once the named room is generated with at least two users inside,
-  # begin the negotiation steps.
+ # First
   def handle_msg(message, state) do
 
     action = get_action(message)
     case action do
       "join" ->
-        Logger.print("Find out the type of user that is connecting")
+        Logger.info("Find out the type of user that is connecting")
       _ ->
         "unknown action #{action}"
     end
@@ -72,7 +57,7 @@ defmodule Phraze.Signaler do
 
       state.registry_key, fn(entries) ->
 
-        IO.puts("Typeof entries: #{typeof(entries)}")
+        Logger.info("Typeof entries: #{typeof(entries)}")
         IO.inspect(entries)
         for {pid, _} <- entries do
           if pid != self() do
@@ -94,8 +79,8 @@ defmodule Phraze.Signaler do
   end
 
   defp get_action(msg) do
-    Jason.decode!(msg, [{:atoms}])
-    |> Enum.get(:action)
+    Jason.decode!(msg, keys: :atoms)
+    |> Map.get(:action)
   end
 
   defp send_to(payload, pid) do

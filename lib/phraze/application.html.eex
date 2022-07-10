@@ -19,7 +19,13 @@
             <input id="room_name" type="text" placeholder="room name">
             <br>
             <br>
-            <input type="submit" value="connect" id="button">
+            <input type="submit" value="channel" id="joinChannel">
+        </form>
+        <form>
+            <input type="submit" value="vri" id="vriCall">
+        </form>
+        <form>
+            <input type="submit" value="vri_terp_join" id="vriTerpJoin">
         </form>
         <div id="mediaLayout">
             <main id="localLayout" width="352" height="240">

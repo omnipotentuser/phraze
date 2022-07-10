@@ -212,23 +212,42 @@
   
       // sends the room name to join
       // at this point, we are starting clean
-      submit(event) {
-        event.preventDefault()
+      joinChannel() {
 
         const input = document.getElementById("room_name")
-        const message = input.value
+        const channel = input.value
         input.value = ""
 
         // need to iterate and delete each remote peer
         removeUserConnection()
-
-        // room is not in use, but to demonstrate how we might begin building
-        // concurrent calls by joining a room.
-        // ideally we'd use a uuid library, but for now,...
         myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
         var payload = {
           action: "join",
-          room: input.value,
+          channel: channel,
+          fromUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      vriPatronCall() {
+        removeUserConnection()
+        myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+        var payload = {
+          action: "vri_call",
+          fromUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      vriTerpJoin() {
+        removeUserConnection()
+        myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+        var payload = {
+          action: "vri_terp_join",
           fromUserId: myUserId
         }
         this.socket.send(
@@ -240,7 +259,11 @@
     const rtcSocketClass = new rtcSocketHandler()
     rtcSocketClass.setupSocket()
     
-    document.getElementById("button")
-      .addEventListener("click", (event) => rtcSocketClass.submit(event))
+    document.getElementById("joinChannel")
+      .addEventListener("click", () => rtcSocketClass.joinChannel())
+    document.getElementById("vriCall")
+      .addEventListener("click", () => rtcSocketClass.vriPatronCall())
+    document.getElementById("vriTerpJoin")
+      .addEventListener("click", () => rtcSocketClass.vriTerpJoin())
   }
 )()
