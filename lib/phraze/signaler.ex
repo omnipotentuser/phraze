@@ -43,9 +43,24 @@ defmodule Phraze.Signaler do
   def handle_msg(message, state) do
 
     action = get_action(message)
+
+    # possible actions:
+    # "join", assumed to be for patrons to register themselves
+    # "vri_call", patrons making a vri call request
+    # "vri_terp_join", interpreter joining and going to vri queue
+    # "sdp", negotiation by the offer and answer UA
+    # "ice_candidate", peers exchanging their ice_ca
     case action do
       "join" ->
-        Logger.info("Find out the type of user that is connecting")
+        Logger.info("Sending its way to the Patron Registrar by connecting via a named channel")
+      "vri_call" ->
+        Logger.info("Sending its way to the ACD dispatcher to begin VRI call session.")
+      "vri_terp_join" ->
+        Logger.info("Sending its way to the vri dispatcher for agent to enter VRI queue.")
+      "sdp" ->
+        Logger.info("Sending its way to Session Controller for SDP negotiation")
+      "ice_candidate" ->
+        Logger.info("Sending its way to Session Controller for ICE Candidate forwarding")
       _ ->
         "unknown action #{action}"
     end
