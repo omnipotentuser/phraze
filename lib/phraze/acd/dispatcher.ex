@@ -20,6 +20,8 @@ defmodule Phraze.Acd.Dispatcher do
 
   require Logger
 
+  alias Phraze.Acd.{Registrar, Vri}
+
 
   # Signaler calls this to send out the call type for the acd to handle. The
   # handler here then begins the process assigning the socket pid and other
@@ -35,7 +37,64 @@ defmodule Phraze.Acd.Dispatcher do
   # type: type of call request - register_patron, vri_patron, vrs_patron,
   # vri_agent, vrs_agent uuid: the user id of user agent (UA) created by the end
   # user application device: the device of the end user if exists. may be empty.
-  def handle_request(%{pid: _pid, type: _type, uuid: _uuid, device: _device}) do
+  def handle_request(pid, payload) do
+    action = get_action(payload)
+
+    # possible actions:
+    # "join", assumed to be for patrons to register themselves
+    # "vri_call", patrons making a vri call request
+    # "vri_terp_join", interpreter joining and going to vri queue
+    # "sdp", negotiation by the offer and answer UA
+    # "ice_candidate", peers exchanging their ice_ca
+    case action do
+      "join" ->
+        Logger.info("Sending its way to the Patron Registrar by connecting via a named channel")
+        #var payload = {
+        #  action: "join",
+        #  channel: channel,
+        #  fromUserId: myUserId
+        #}
+        route_to(:register, pid, payload)
+
+      "vri_call" ->
+        Logger.info("Sending its way to the ACD dispatcher to begin VRI call session.")
+        route_to(:vri_call, pid, payload)
+      "vri_terp_join" ->
+        Logger.info("Sending its way to the vri dispatcher for agent to enter VRI queue.")
+        route_to(:vri_terp_join, pid, payload)
+      "sdp" ->
+        Logger.info("Sending its way to Session Controller for SDP negotiation")
+      "ice_candidate" ->
+        Logger.info("Sending its way to Session Controller for ICE Candidate forwarding")
+      _ ->
+        "unknown action #{action}"
+    end
+  end
+
+
+  def route_to(:register, pid, payload) do
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+    Registrar.UserAgent.register(pid, uuid, payload)
+    {:ok}
+  end
+
+  def route_to(:vri_call, pid, payload) do
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+    Vri.UserAgent.
+    {:ok}
+  end
+
+  # May want to test this using FunWithFlags when I am ready to add device
+  # information to use for records
+  def route_to(pid, payload, _device) do
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+
+    {:ok}
+  end
+
+  # May want to test this using FunWithFlags when I am ready to add type
+  # for routing
+  def route_to(pid, uuid, payload, _device, _type) do
     IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
 
     {:ok}
@@ -54,5 +113,11 @@ defmodule Phraze.Acd.Dispatcher do
   defp register_ua(%{pid: _pid, uuid: _uuid, device: _device}) do
     IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
     {:ok}
+  end
+
+
+  defp get_action(msg) do
+    Jason.decode!(msg, keys: :atoms)
+    |> Map.get(:action)
   end
 end

@@ -6,6 +6,7 @@ defmodule Phraze.Signaler do
   @behaviour :cowboy_websocket
 
   require Logger
+  alias Phraze.Acd.{Dispatcher}
 
   def init(request, _state) do
     state = %{registry_key: request.path}
@@ -41,46 +42,28 @@ defmodule Phraze.Signaler do
 
  # First
   def handle_msg(message, state) do
+    {:ok, pid_list, respond_message} = Dispatcher.handle_request(self(), message)
 
-    action = get_action(message)
-
-    # possible actions:
-    # "join", assumed to be for patrons to register themselves
-    # "vri_call", patrons making a vri call request
-    # "vri_terp_join", interpreter joining and going to vri queue
-    # "sdp", negotiation by the offer and answer UA
-    # "ice_candidate", peers exchanging their ice_ca
-    case action do
-      "join" ->
-        Logger.info("Sending its way to the Patron Registrar by connecting via a named channel")
-      "vri_call" ->
-        Logger.info("Sending its way to the ACD dispatcher to begin VRI call session.")
-      "vri_terp_join" ->
-        Logger.info("Sending its way to the vri dispatcher for agent to enter VRI queue.")
-      "sdp" ->
-        Logger.info("Sending its way to Session Controller for SDP negotiation")
-      "ice_candidate" ->
-        Logger.info("Sending its way to Session Controller for ICE Candidate forwarding")
-      _ ->
-        "unknown action #{action}"
-    end
-
+    # for each pid in the list, send to the websocket pid the responded message
+    pid_list
+    |> Enum.map(&(&1))
+    |> send_to(respond_message)
 
     # This needs to be moved to patron and interpreter queue registries instead
-    Registry.Phraze
-    |> Registry.dispatch(
+    # Registry.Phraze
+    # |> Registry.dispatch(
 
-      state.registry_key, fn(entries) ->
+    #   state.registry_key, fn(entries) ->
 
-        Logger.info("Typeof entries: #{typeof(entries)}")
-        IO.inspect(entries)
-        for {pid, _} <- entries do
-          if pid != self() do
-            send_to(message, pid)
-          end
-        end
-      end
-    )
+    #     Logger.info("Typeof entries: #{typeof(entries)}")
+    #     IO.inspect(entries)
+    #     for {pid, _} <- entries do
+    #       if pid != self() do
+    #         send_to(message, pid)
+    #       end
+    #     end
+    #   end
+    # )
   end
 
   def websocket_info(info, state) do
@@ -93,12 +76,7 @@ defmodule Phraze.Signaler do
     :ok
   end
 
-  defp get_action(msg) do
-    Jason.decode!(msg, keys: :atoms)
-    |> Map.get(:action)
-  end
-
-  defp send_to(payload, pid) do
+  defp send_to(pid, payload) do
     IO.puts("Sending #{payload.action} to #{inspect(pid)} from #{inspect(self())}")
     action = payload.action
     case action do
