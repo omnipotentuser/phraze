@@ -52,18 +52,6 @@ defmodule Phraze.Acd.Vri.Agent do
     {:ok}
   end
 
-  # Create new ACD for interpreters to wait for the next session
-  def create_acd(:vri_interpreter) do
-    IO.puts("ACD Controller create new vri interpreter acd process from ACD module")
-    #GenServer.cast(__MODULE__, {:put, key})
-    {:ok}
-  end
-
-  # Do not need to use call, we want async
-  # def get (key) do
-  #   GenServer.call(__MODULE__, {:put, key})
-  # end
-
   def init(_) do
     :timer.send_after(1000, :mock_db)
     # initialize Ecto to populate ACDs if any remains after last time the controller accessed

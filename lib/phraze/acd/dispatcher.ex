@@ -64,39 +64,55 @@ defmodule Phraze.Acd.Dispatcher do
         route_to(:vri_terp_join, pid, payload)
       "sdp" ->
         Logger.info("Sending its way to Session Controller for SDP negotiation")
+        route_to(:sdp, pid, payload)
       "ice_candidate" ->
         Logger.info("Sending its way to Session Controller for ICE Candidate forwarding")
+        route_to(:ice_candidate, pid, payload)
       _ ->
         "unknown action #{action}"
     end
   end
 
 
-  def route_to(:register, pid, payload) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
-    Registrar.UserAgent.register(pid, uuid, payload)
+  defp route_to(:register, pid, payload) do
+    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+    Registrar.UserAgent.add(pid, payload)
     {:ok}
   end
 
-  def route_to(:vri_call, pid, payload) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
-    Vri.UserAgent.
+  defp route_to(:vri_call, patron_pid, payload) do
+    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+    # Vri.Patron.add_to_waiting(pid, payload)
+    # {:ok, agent_pid} = Vri.Agent.GetFirst()
+    if agent_pid do
+      # create session
+      # Session.Controller.create_room([pid, agent_pid], payload)
+    else
+      # when agent becomes available, trigger callback to check for patron
+      # waiting in queue then create session
+    end
     {:ok}
   end
 
   # May want to test this using FunWithFlags when I am ready to add device
   # information to use for records
-  def route_to(pid, payload, _device) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+  defp route_to(:vri_terp_join, pid, payload) do
+    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
 
     {:ok}
   end
 
   # May want to test this using FunWithFlags when I am ready to add type
   # for routing
-  def route_to(pid, uuid, payload, _device, _type) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+  defp route_to(:sdp, ua_pid, channel, payload) do
+    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+    # Session.Controller.sdp(ua_pid, channel, payload)
+    {:ok}
+  end
 
+  defp route_to(:ice_candidate, ua_pid, channel, payload) do
+    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+    # Session.Controller.ice_candidate(pid, channel, payload)
     {:ok}
   end
 

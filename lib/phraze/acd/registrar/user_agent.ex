@@ -15,7 +15,13 @@ defmodule Phraze.Acd.Registrar.UserAgent do
   use GenServer
   require Logger
 
-  def register(pid, _device, payload) do
+  def add(pid, payload) do
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+    #GenServer.cast(__MODULE__, {:put, key})a sessi
+    {:ok}
+  end
+
+  def remove(pid) do
     IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
     #GenServer.cast(__MODULE__, {:put, key})a sessi
     {:ok}
