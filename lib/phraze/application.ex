@@ -9,11 +9,6 @@ defmodule Phraze.Application do
 
   @impl true
   def start(_type, _args) do
-    session_child_config = [
-      strategy: :one_for_one,
-      name: Phraze.SessionDispatcher,
-      max_seconds: 30
-    ]
     scheme = Application.get_env(:phraze, :scheme)
     options = Application.get_env(:phraze, :cowboy)
     children = [
@@ -30,11 +25,14 @@ defmodule Phraze.Application do
       ),
       Phraze.Acd.Vri.Agent,
       Phraze.Acd.Vri.Patron,
-      Phraze.Acd.Vrs.Agent,
-      Phraze.Acd.Vrs.Patron,
       Phraze.Acd.Registrar.UserAgent,
       {Registry, keys: :unique, name: Phraze.SessionRegistry},
-      {DynamicSupervisor, session_child_config}
+      {Registry, keys: :duplicate, name: Phraze.PeerRegistrar},
+      {DynamicSupervisor, [
+        strategy: :one_for_one,
+        name: Phraze.SessionRunner,
+        max_seconds: 30
+      ]}
     ]
 
     Logger.info("Application started, using #{scheme}.")

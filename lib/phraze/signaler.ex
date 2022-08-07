@@ -41,10 +41,13 @@ defmodule Phraze.Signaler do
   end
 
  # First
-  def handle_msg(message, state) do
+  def handle_msg(message, _state) do
+
+    # The Dispatcher will digest the message and return with list of pids
     {:ok, pid_list, respond_message} = Dispatcher.handle_request(self(), message)
 
-    # for each pid in the list, send to the websocket pid the responded message
+    # for each pid in the list, send the responded message to remote peer
+    # websocket
     pid_list
     |> Enum.map(&(&1))
     |> send_to(respond_message)

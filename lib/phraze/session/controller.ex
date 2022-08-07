@@ -1,19 +1,13 @@
 defmodule Phraze.Session.Controller do
   @moduledoc """
-  Sessions are generated dynamically. A DynamicSupervisor is needed to regulate
-  the states of each session. This is where the Controller comes in.
+  The Controller's primary responsibility is to administer the sessions. It controls as the interface
+  to the channels, or the rooms.
   """
 
 
-  alias Phraze.{SessionDispatcher, Session.SessionSupervisor}
-
-  def start_job(args) do
-
-    DynamicSupervisor.start_child(SessionDispatcher, {SessionSupervisor, args})
-
-  end
+  alias Phraze.{SessionRegistry}
 
   # Need to add functions to get, create, insert, lookups sessions
-  # i.e. Registry.select(Phraze.SessionRegistry, [{match_all, guards, map_result}])
+  # i.e. SessionRegistry.select(Phraze.SessionRegistry, [{match_all, guards, map_result}])
 
 end

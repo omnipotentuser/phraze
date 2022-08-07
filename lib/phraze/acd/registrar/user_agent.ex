@@ -15,9 +15,19 @@ defmodule Phraze.Acd.Registrar.UserAgent do
   use GenServer
   require Logger
 
-  def add(pid, payload) do
+  #var payload = {
+  #  action: "join",
+  #  channel: channel,
+  #  fromUserId: myUserId
+  #}
+  def add(%{pid: pid, payload: payload}) do
     IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
-    #GenServer.cast(__MODULE__, {:put, key})a sessi
+    #GenServer.cast(__MODULE__, {:put, key})
+    channel = Jason.decode!(payload, keys: :atoms)
+    |> Map.get(:channel)
+
+    {:ok, r_pid} = Registry.register(Phraze.PeerRegistrar, channel, pid)
+    Logger.info("Registry ${r_pid} registered #{pid} to #{channel} ")
     {:ok}
   end
 

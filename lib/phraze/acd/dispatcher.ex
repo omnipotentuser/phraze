@@ -1,9 +1,10 @@
 defmodule Phraze.Acd.Dispatcher do
   @moduledoc """
-  The ACD Dispatcher acts as a layer between the Signaler and the registrars and queues for
-  clients that join and make call requests. The Dispatcher is responsible placing
-  Socket PIDs that gets created from the cowboy_websocket into the appropriate
-  queue or registry for preserving the connection and its state.
+  The ACD Dispatcher acts as an interface between the Signaler and the
+  registrars and queues for clients that join and make call requests. The
+  Dispatcher is responsible placing Socket PIDs that gets created from the
+  cowboy_websocket into the appropriate queue or registrar for preserving the
+  connection and its state.
 
   The Dispatcher does not carry any state so a genserver is not needed.
 
@@ -12,15 +13,17 @@ defmodule Phraze.Acd.Dispatcher do
   target queue is dispatched to the session process to be handled further.
 
   After the session is completed, the user agent pid, depending on type of user,
-  returns to the queue or the user agent registry as defined in the ACD Dispatcher.
-  This action may be programmatically executed, or performed through the end
-  user triggering action as brokered by the Signaler to the ACD Dispatcher.
+  returns to the queue or the user agent registrar as defined in the ACD
+  Dispatcher. This action may be programmatically executed, or performed through
+  the end user triggering action as brokered by the Signaler to the ACD
+  Dispatcher.
   """
 
 
   require Logger
 
   alias Phraze.Acd.{Registrar, Vri}
+  alias Phraze.{SessionSupervisor, SessionRunner}
 
 
   # Signaler calls this to send out the call type for the acd to handle. The
@@ -49,13 +52,10 @@ defmodule Phraze.Acd.Dispatcher do
     case action do
       "join" ->
         Logger.info("Sending its way to the Patron Registrar by connecting via a named channel")
-        #var payload = {
-        #  action: "join",
-        #  channel: channel,
-        #  fromUserId: myUserId
-        #}
-        route_to(:register, pid, payload)
+        route_to(:registrar_add, %{pid: pid, payload: payload})
 
+      "peer_to_peer" ->
+        route_to(:peer_to_peer, %{pid: pid, payload: payload})
       "vri_call" ->
         Logger.info("Sending its way to the ACD dispatcher to begin VRI call session.")
         route_to(:vri_call, pid, payload)
@@ -74,29 +74,32 @@ defmodule Phraze.Acd.Dispatcher do
   end
 
 
-  defp route_to(:register, pid, payload) do
+  # when a peer connects they register by adding themselves to the Registry. A
+  #
+  defp route_to(:registrar_add, args) do
     Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
-    Registrar.UserAgent.add(pid, payload)
+    Registrar.UserAgent.add(args)
     {:ok}
   end
 
-  defp route_to(:vri_call, patron_pid, payload) do
+  defp route_to(:peer_to_peer, args) do
+
+    # adds a new supervisor to the Application Supervisor
+    DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, args})
+    # creates a SessionSupervisor Supervisor
+  end
+
+  # patron sends a message to start a vri call
+  defp route_to(:vri_call,_agent_pid, _payload) do
     Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
     # Vri.Patron.add_to_waiting(pid, payload)
     # {:ok, agent_pid} = Vri.Agent.GetFirst()
-    if agent_pid do
-      # create session
-      # Session.Controller.create_room([pid, agent_pid], payload)
-    else
-      # when agent becomes available, trigger callback to check for patron
-      # waiting in queue then create session
-    end
-    {:ok}
+
   end
 
   # May want to test this using FunWithFlags when I am ready to add device
   # information to use for records
-  defp route_to(:vri_terp_join, pid, payload) do
+  defp route_to(:vri_terp_join, _pid, _payload) do
     Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
 
     {:ok}
@@ -104,14 +107,14 @@ defmodule Phraze.Acd.Dispatcher do
 
   # May want to test this using FunWithFlags when I am ready to add type
   # for routing
-  defp route_to(:sdp, ua_pid, channel, payload) do
-    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+  defp route_to(:sdp, _ua_pid, _payload) do
+    Logger.info("ACD Dispatcher passes the sdp to the peers")
     # Session.Controller.sdp(ua_pid, channel, payload)
     {:ok}
   end
 
-  defp route_to(:ice_candidate, ua_pid, channel, payload) do
-    Logger.info("ACD Dispatcher create new vri patron acd process from ACD module")
+  defp route_to(:ice_candidate, _ua_pid, _payload) do
+    Logger.info("ACD Dispatcher passes the ice candidates to the peers")
     # Session.Controller.ice_candidate(pid, channel, payload)
     {:ok}
   end
