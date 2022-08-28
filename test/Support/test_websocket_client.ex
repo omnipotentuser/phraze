@@ -20,42 +20,42 @@ defmodule Phraze.TestWebsocketClient do
   end
 
   def handle_cast({:get_state, pid}, state) do
-    IO.puts ("handle_cast #{inspect state}")
-    #item = hd(state)
+    IO.puts("handle_cast #{inspect(state)}")
+    # item = hd(state)
     send(pid, state)
     {:ok, tl(state)}
   end
 
   def handle_frame({:text, "ok" = msg}, state) do
-    IO.puts "handle_frame #{inspect msg}, state - #{inspect state}"
+    IO.puts("handle_frame #{inspect(msg)}, state - #{inspect(state)}")
     {:ok, state}
   end
 
   def handle_frame({:text, "pong" = msg}, state) do
-    IO.puts "Received Pong - Message: #{inspect msg}, state - #{inspect state}"
+    IO.puts("Received Pong - Message: #{inspect(msg)}, state - #{inspect(state)}")
     state = state ++ [msg]
-    IO.puts("handle_frame -pong- #{inspect state}")
+    IO.puts("handle_frame -pong- #{inspect(state)}")
     {:ok, state}
   end
 
   def handle_frame({:text, msg}, state) when is_bitstring(msg) do
-    IO.puts "Received text - Message: #{inspect msg}, state - #{inspect state}"
+    IO.puts("Received text - Message: #{inspect(msg)}, state - #{inspect(state)}")
     {:ok, payload} = Jason.decode(msg, keys: :atoms)
-    state = state ++ [payload]
-    IO.puts("handle_frame negotiate #{inspect state}")
-    {:ok, state}
+    # state = state ++ [payload]
+    IO.puts("handle_frame #{inspect(payload)}")
+    {:ok, payload}
   end
 
   def handle_frame({:text, msg}, state) do
-    IO.puts "Catch-All: Received Message - #{inspect msg}, state - #{inspect state}"
+    IO.puts("Catch-All: Received Message - #{inspect(msg)}, state - #{inspect(state)}")
     {:close, state}
   end
 
   def terminate(reason, state) do
-    IO.puts("\nSocket Terminating:\n#{inspect reason}\n\n#{inspect state}\n")
+    IO.puts("\nSocket Terminating:\n#{inspect(reason)}\n\n#{inspect(state)}\n")
     exit(:normal)
   end
 
-  #defp examine_packet(%{action: sdp, description: desc, fromUserId: userid}), do: {:ok, %{action: sdp, description: desc, fromUserId: userid}}
-  #defp examine_packet(_), do: {:error, %{}}
+  # defp examine_packet(%{action: sdp, description: desc, fromUserId: userid}), do: {:ok, %{action: sdp, description: desc, fromUserId: userid}}
+  # defp examine_packet(_), do: {:error, %{}}
 end

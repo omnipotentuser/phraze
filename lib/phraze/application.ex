@@ -11,6 +11,7 @@ defmodule Phraze.Application do
   def start(_type, _args) do
     scheme = Application.get_env(:phraze, :scheme)
     options = Application.get_env(:phraze, :cowboy)
+
     children = [
       Phraze.Repo,
       FunWithFlags.Supervisor,
@@ -23,16 +24,16 @@ defmodule Phraze.Application do
         keys: :duplicate,
         name: Registry.Phraze
       ),
-      Phraze.Acd.Vri.Agent,
-      Phraze.Acd.Vri.Patron,
-      Phraze.Acd.Registrar.UserAgent,
+      Phraze.Acd.Vri.InterpreterQueue,
+      Phraze.Acd.Vri.WaitQueue,
       {Registry, keys: :unique, name: Phraze.SessionRegistry},
       {Registry, keys: :duplicate, name: Phraze.PeerRegistrar},
-      {DynamicSupervisor, [
-        strategy: :one_for_one,
-        name: Phraze.SessionRunner,
-        max_seconds: 30
-      ]}
+      {DynamicSupervisor,
+       [
+         strategy: :one_for_one,
+         name: Phraze.SessionRunner,
+         max_seconds: 30
+       ]}
     ]
 
     Logger.info("Application started, using #{scheme}.")

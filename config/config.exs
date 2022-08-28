@@ -36,13 +36,14 @@ config :logger, :console,
 #  port: 6379,
 #  database: 0
 
-config :fun_with_flags, :cache_bust_notifications, [enabled: false]
+config :fun_with_flags, :cache_bust_notifications, enabled: false
 
 # FunWithFlags configuration.
 config :fun_with_flags, :persistence,
   adapter: FunWithFlags.Store.Persistent.Ecto,
   repo: MyApp.Repo
-  # Default table name is "fun_with_flags_toggles".
+
+# Default table name is "fun_with_flags_toggles".
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

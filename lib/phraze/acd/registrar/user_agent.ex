@@ -7,79 +7,78 @@ defmodule Phraze.Acd.Registrar.UserAgent do
   crashes then the socket has to reconnect and be added back to the new registry
   pid.
 
-  Once a patron creates a call to vri or some other service, the dispatcher moves
-  the pid of the patron to the target queue, such as VriPatron queue. If it is a
-  simple p2p connection, then the dispatcher creates a new session and pulls the
-  patrons into the session room and begins the negotiation.
+  An User Agent may register to multiple channels just like IRC. The agent can get updated with
+  status of its state
   """
-  use GenServer
+
   require Logger
+  @agent_available :available
+  # @agent_away :away
+  # @agent_busy :busy
 
-  #var payload = {
+  defstruct status: @agent_available
+
+  # var payload = {
   #  action: "join",
-  #  channel: channel,
-  #  fromUserId: myUserId
-  #}
+  #  extension: extension,
+  #  myUserId: myUserId
+  # }
   def add(%{pid: pid, payload: payload}) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
-    #GenServer.cast(__MODULE__, {:put, key})
-    channel = Jason.decode!(payload, keys: :atoms)
-    |> Map.get(:channel)
+    Logger.info("Add a new User Agent to the PeerRegistrar")
+    # parsed_payload = Jason.decode!(payload, [keys: :atoms])
+    digest =
+      payload
+      |> Map.take([:extension, :my_user_id])
+      |> Map.merge(%{sock_pid: pid, status: @agent_available})
 
-    {:ok, r_pid} = Registry.register(Phraze.PeerRegistrar, channel, pid)
-    Logger.info("Registry ${r_pid} registered #{pid} to #{channel} ")
+    # returns new Register pid
+    Registry.register(Phraze.PeerRegistrar, digest.extension, digest)
+  end
+
+  def remove(%{extension: _extension, my_user_id: _my_user_id, pid: _pid}) do
+    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
+    # GenServer.cast(__MODULE__, {:put, key})a sessi
     {:ok}
   end
 
-  def remove(pid) do
-    IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
-    #GenServer.cast(__MODULE__, {:put, key})a sessi
+  def update_status(:busy, %{extension: _extension, my_user_id: _my_user_id, pid: _pid}) do
+    IO.puts("Updates the agent status to busy")
+    # GenServer.cast(__MODULE__, {:put, key})a sessi
     {:ok}
   end
 
-  @doc """
-  I am not sure what the initial state should look like, but for now we can have
-  an empty List, and each patron that connects, a tuple consisting of :uuid,
-  :name, :device, :protocol be added to the List
-  """
-  def start_link(_) do
-    IO.puts("Starting ACD Controller")
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
-  end
+  # def start_link(_) do
+  #   IO.puts("Starting User Agent Registrar")
+  #   GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  # end
 
-  # In the future, add a DynamicSupervisor and Registry that holds pid for each
-  # Patron GenServer instead of using a List that holds tuples of the patrons.
-  # This prevents the case that if the Patron pid crashes, not all patrons info
-  # are lost.
-  def init(_) do
-    :timer.send_after(1000, :mock_db)
-    # initialize Ecto to populate ACDs if any remains after last time the
-    # controller accessed
-    {:ok, []}
-  end
-
-  # get patron acd from Registry
-  def handle_call({:get_acd, :patron}, _, state) do
-    IO.puts("handle_cast - get patron acd")
-
-    {:reply, "", state}
-  end
+  # def init(_) do
+  #   :timer.send_after(1000, :register_db)
+  #   # initialize Ecto to populate ACDs if any remains after last time the controller accessed
+  #   {:ok, []}
+  # end
 
   # get interpreter acd from Registry
-  def handle_call({:get_acd, :interpreter}, _, state) do
-    IO.puts("handle_cast - get interpreter acd")
+  # def handle_call({:get_acd, :interpreter}, _, state) do
+  #   IO.puts("handle_cast - get interpreter acd")
 
-    {:reply, "", state}
-  end
+  #   {:reply, "", state}
+  # end
 
-  def handle_call({:clear}, _, _state) do
-    IO.puts("handle_call clearing up batch")
-    {:reply, "", []}
-  end
+  # use cast to update agent status
+  # def handle_cast({:update, status}, state) do
+  #   state = [ speed | state ]
+  #   IO.puts("Checking state during put: #{inspect(state)}")
+  #   {:noreply, state}
+  # end
 
-  def handle_info(:mock_db, state) do
-    IO.puts "gets called after init"
-    {:noreply, state}
-  end
+  # def handle_call({:clear}, _, _state) do
+  #   IO.puts("handle_call clearing up batch")
+  #   {:reply, "", []}
+  # end
 
+  # def handle_info(:register_db, state) do
+  #   IO.puts "read and restore Registrar registry from db"
+  #   {:noreply, state}
+  # end
 end
