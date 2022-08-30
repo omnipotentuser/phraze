@@ -26,8 +26,8 @@ defmodule Phraze.Application do
       ),
       Phraze.Acd.Vri.InterpreterQueue,
       Phraze.Acd.Vri.WaitQueue,
-      {Registry, keys: :unique, name: Phraze.SessionRegistry},
       {Registry, keys: :duplicate, name: Phraze.PeerRegistrar},
+      {Registry, keys: :unique, name: Phraze.SessionRegistry},
       {DynamicSupervisor,
        [
          strategy: :one_for_one,

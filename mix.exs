@@ -37,7 +37,7 @@ defmodule Phraze.MixProject do
     [
       mod: {Phraze.Application, []},
       included_applications: [:fun_with_flags],
-      extra_applications: [:logger, :runtime_tools, :crypto]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 

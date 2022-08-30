@@ -21,9 +21,8 @@ defmodule Phraze.TestWebsocketClient do
 
   def handle_cast({:get_state, pid}, state) do
     IO.puts("handle_cast #{inspect(state)}")
-    # item = hd(state)
     send(pid, state)
-    {:ok, tl(state)}
+    {:ok, state}
   end
 
   def handle_frame({:text, "ok" = msg}, state) do

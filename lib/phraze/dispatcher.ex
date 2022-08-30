@@ -39,7 +39,6 @@ defmodule Phraze.Dispatcher do
   # vri_agent, vrs_agent uuid: the user id of user agent (UA) created by the end
   # user application device: the device of the end user if exists. may be empty.
   def handle_request(pid, payload) do
-    # action = get_action(payload)
     decoded_payload = Jason.decode!(payload, keys: :atoms)
     IO.inspect(decoded_payload, label: "decoded_payload")
     route_to(decoded_payload.action, pid, decoded_payload)
@@ -129,9 +128,4 @@ defmodule Phraze.Dispatcher do
   #   IO.puts("ACD Dispatcher create new vri patron acd process from ACD module")
   #   {:ok}
   # end
-
-  defp get_action(msg) do
-    Jason.decode!(msg, keys: :atoms)
-    |> Map.get(:action)
-  end
 end

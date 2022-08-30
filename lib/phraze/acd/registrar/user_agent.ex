@@ -23,13 +23,10 @@ defmodule Phraze.Acd.Registrar.UserAgent do
   #  extension: extension,
   #  myUserId: myUserId
   # }
-  def add(%{pid: pid, payload: payload}) do
+  def add(%{pid: _pid, payload: payload}) do
     Logger.info("Add a new User Agent to the PeerRegistrar")
     # parsed_payload = Jason.decode!(payload, [keys: :atoms])
-    digest =
-      payload
-      |> Map.take([:extension, :my_user_id])
-      |> Map.merge(%{sock_pid: pid, status: @agent_available})
+    digest = Map.merge(payload, %{status: @agent_available})
 
     # returns new Register pid
     Registry.register(Phraze.PeerRegistrar, digest.extension, digest)

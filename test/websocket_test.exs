@@ -44,9 +44,49 @@ defmodule WebsocketTest do
       assert payload.myUserId == msg.data.my_user_id
 
       # test registrar
-      user_agent = Registry.lookup(Phraze.PeerRegistrar, msg.data.extension)
-      IO.inspect(user_agent, label: "Registry.lookup:")
-      assert "foo" == user_agent
+      [{_pid, %{extension: extension, myUserId: uid, status: available, action: action}} | _] =
+        Registry.lookup(Phraze.PeerRegistrar, msg.data.extension)
+
+      assert extension == payload.extension
+      assert uid == payload.myUserId
+      assert available == :available
+      assert action == payload.action
+    end
+
+    test "duplicate username logins (should pass)", context do
+      a_payload = %{
+        action: "login",
+        myUserId: :rand.uniform(1000),
+        extension: "nick@phraze.app"
+      }
+
+      b_payload = %{
+        action: "login",
+        myUserId: :rand.uniform(1000),
+        extension: "nick@phraze.app"
+      }
+
+      assert :ok = TestClient.send_client(context.pid_a, Jason.encode!(a_payload))
+      Process.sleep(@wait_period)
+      a_msg = TestClient.get_state(context.pid_a)
+      assert "login" == a_msg.action
+      assert a_payload.myUserId == a_msg.data.my_user_id
+
+      assert :ok = TestClient.send_client(context.pid_b, Jason.encode!(b_payload))
+      Process.sleep(@wait_period)
+      b_msg = TestClient.get_state(context.pid_b)
+      assert "login" == b_msg.action
+      assert b_payload.myUserId == b_msg.data.my_user_id
+
+      # test registrar for device a
+      user_agent = Registry.lookup(Phraze.PeerRegistrar, "nick@phraze.app")
+
+      assert Enum.count(user_agent) == 2
+
+      Enum.each(user_agent, fn agent ->
+        {_pid, %{extension: "nick@phraze.app", myUserId: uid}} = agent
+        assert Enum.member?([a_payload.myUserId, b_payload.myUserId], uid)
+      end)
     end
 
     @tag :skip

@@ -6,6 +6,7 @@ defmodule Phraze.Signaler do
 
   require Logger
   alias Phraze.Dispatcher
+  alias Phraze.Utilities.Verify, as: V
 
   def init(request, _state) do
     state = %{registry_key: request.path}
@@ -23,7 +24,7 @@ defmodule Phraze.Signaler do
 
   def websocket_handle({:text, message}, state) do
     IO.puts("received message: #{message}")
-    IO.puts("typeof message: #{typeof(message)}")
+    IO.puts("typeof message: #{V.kind(message)}")
     handle_msg(message, state)
     {:reply, {:text, "ok"}, state}
   end
@@ -90,45 +91,33 @@ defmodule Phraze.Signaler do
     :ok
   end
 
-  defp send_to(pid, payload) do
-    IO.puts("Sending #{payload.action} to #{inspect(pid)} from #{inspect(self())}")
-    action = payload.action
+  # defp send_to(pid, payload) do
+  #   IO.puts("Sending #{payload.action} to #{inspect(pid)} from #{inspect(self())}")
+  #   action = payload.action
 
-    case action do
-      "join" ->
-        # Ideally, in the future we keep track of rooms and the uuid
-        # assigned to the room. The room can be an extension number or a conference
-        # call, or simply a readable room name.
-        uuid = payload["fromUserId"]
+  #   case action do
+  #     "join" ->
+  #       # Ideally, in the future we keep track of rooms and the uuid
+  #       # assigned to the room. The room can be an extension number or a conference
+  #       # call, or simply a readable room name.
+  #       uuid = payload["fromUserId"]
 
-        {:ok, offer} =
-          Jason.encode(%{
-            type: "create_offer",
-            fromUserId: uuid
-          })
+  #       {:ok, offer} =
+  #         Jason.encode(%{
+  #           type: "create_offer",
+  #           fromUserId: uuid
+  #         })
 
-        Process.send(pid, offer, [])
+  #       Process.send(pid, offer, [])
 
-      "sdp" ->
-        Process.send(pid, Jason.encode(payload), [])
+  #     "sdp" ->
+  #       Process.send(pid, Jason.encode(payload), [])
 
-      "ice_candidate" ->
-        Process.send(pid, Jason.encode(payload), [])
+  #     "ice_candidate" ->
+  #       Process.send(pid, Jason.encode(payload), [])
 
-      _ ->
-        "Unknown action #{action}"
-    end
-  end
-
-  defp typeof(a) when is_float(a), do: "float"
-  defp typeof(a) when is_number(a), do: "number"
-  defp typeof(a) when is_float(a), do: "atom"
-  defp typeof(a) when is_float(a), do: "boolean"
-  defp typeof(a) when is_float(a), do: "binary"
-  defp typeof(a) when is_float(a), do: "function"
-  defp typeof(a) when is_list(a), do: "list"
-  defp typeof(a) when is_tuple(a), do: "tuple"
-  defp typeof(a) when is_map(a), do: "map"
-  defp typeof(a) when is_bitstring(a), do: "string"
-  defp typeof(_), do: nil
+  #     _ ->
+  #       "Unknown action #{action}"
+  #   end
+  # end
 end

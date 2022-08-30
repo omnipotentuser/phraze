@@ -27,7 +27,6 @@ defmodule Phraze.Acd.Vri.WaitQueue do
   #
   # NICK - need to create a :continue to allow the controller to spawn multiple acds
   def add_to_queue(:patron) do
-    IO.puts("Add User Agent into waiting queue")
     # GenServer.cast(__MODULE__, {:put, key})
     {:ok}
   end
@@ -45,15 +44,11 @@ defmodule Phraze.Acd.Vri.WaitQueue do
 
   # get patron acd from Registry
   def handle_call({:get_acd, :patron}, _, state) do
-    IO.puts("handle_cast - get patron acd")
-
     {:reply, "", state}
   end
 
   # get interpreter acd from Registry
   def handle_call({:get_acd, :interpreter}, _, state) do
-    IO.puts("handle_cast - get interpreter acd")
-
     {:reply, "", state}
   end
 
@@ -64,12 +59,10 @@ defmodule Phraze.Acd.Vri.WaitQueue do
   # end
 
   def handle_call({:clear}, _, _state) do
-    IO.puts("handle_call clearing up batch")
     {:reply, "", []}
   end
 
   def handle_info(:mock_db, state) do
-    IO.puts("gets called after init")
     {:noreply, state}
   end
 end
