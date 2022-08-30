@@ -2,15 +2,20 @@ defmodule Phraze.Router do
   use Plug.Router
   require EEx
 
-  plug Plug.Static,
+  plug(Plug.Static,
     at: "/",
     from: :phraze
-  plug :match
-  plug Plug.Parsers,
+  )
+
+  plug(:match)
+
+  plug(Plug.Parsers,
     parsers: [:json],
     pass: ["application/json"],
     json_decoder: Jason
-  plug :dispatch
+  )
+
+  plug(:dispatch)
 
   EEx.function_from_file(:defp, :application_html, "lib/phraze/application.html.eex", [])
 

@@ -52,7 +52,7 @@
       return users;
     }
 
-    function removeUserConnection() {
+    function removeRemoteUserConnection() {
       for (const [fromUserId, peerConnection] of Object.entries(users)) {
         console.log(fromUserId, peerConnection);
         if( document.getElementById(fromUserId) )
@@ -210,27 +210,94 @@
         })
       }
   
-      // sends the room name to join
-      // at this point, we are starting clean
-      submit(event) {
-        event.preventDefault()
+      login() {
 
-        const input = document.getElementById("room_name")
-        const message = input.value
+        const input = document.getElementById("extension")
+        const extension = input.value
         input.value = ""
 
-        // need to iterate and delete each remote peer
-        removeUserConnection()
 
-        // room is not in use, but to demonstrate how we might begin building
-        // concurrent calls by joining a room.
-        // ideally we'd use a uuid library, but for now,...
+        // need to iterate and delete each remote peer
+        removeRemoteUserConnection()
         myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+
+        // in the future, add password
         var payload = {
-          action: "join",
-          room: input.value,
+          action: "login",
+          extension: extension,
+          myUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      call() {
+
+        const input = document.getElementById("call")
+        const peerName = input.value
+        input.value = ""
+
+
+        // need to iterate and delete each remote peer
+        removeRemoteUserConnection()
+        var payload = {
+          action: "call",
+          peer: peerName,
+          myUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      // sends the room name to join
+      // at this point, we are starting clean
+      joinChannel() {
+
+        const input = document.getElementById("channel")
+        const channel = input.value
+        input.value = ""
+
+
+        // need to iterate and delete each remote peer
+        removeRemoteUserConnection()
+        var payload = {
+          action: "join_channel",
+          channel: channel,
+          myUserId: myUserId
+        }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      vriPatronCall() {
+        removeRemoteUserConnection()
+        var payload = {
+          action: "vri_call",
           fromUserId: myUserId
         }
+        this.socket.send(
+          JSON.stringify(payload)
+        )
+      }
+
+      vriLogin() {
+        removeRemoteUserConnection()
+        myUserId = Date.now().toString(36) + Math.random().toString(36).substring(2)
+
+        const input = document.getElementById("interpreterUsername")
+        const extension = input.value
+        input.value = ""
+
+        // in the future, add password
+        var payload = {
+          action: "vri_login",
+          extension: extension,
+          myUserId: myUserId
+        }
+
         this.socket.send(
           JSON.stringify(payload)
         )
@@ -239,8 +306,16 @@
   
     const rtcSocketClass = new rtcSocketHandler()
     rtcSocketClass.setupSocket()
-    
-    document.getElementById("button")
-      .addEventListener("click", (event) => rtcSocketClass.submit(event))
+
+    document.getElementById("login")
+      .addEventListener("click", () => rtcSocketClass.login())
+    document.getElementById("rtcChat")
+      .addEventListener("click", () => rtcSocketClass.call())
+    document.getElementById("vriCall")
+      .addEventListener("click", () => rtcSocketClass.vriPatronCall())
+    document.getElementById("vriLogin")
+      .addEventListener("click", () => rtcSocketClass.vriLogin())
+    document.getElementById("submitChannel")
+      .addEventListener("click", () => rtcSocketClass.joinChannel())
   }
 )()

@@ -1,41 +1,38 @@
 defmodule Phraze.Signaler do
-
   @moduledoc """
   Signaler for listening to websocket connections and handling messages
   """
   @behaviour :cowboy_websocket
 
+  require Logger
+  alias Phraze.Dispatcher
+  alias Phraze.Utilities.Verify, as: V
+
   def init(request, _state) do
     state = %{registry_key: request.path}
 
-    IO.puts("init #{state.registry_key}")
+    IO.puts("Signaler init #{inspect(self())}")
     {:cowboy_websocket, request, state}
   end
 
   def websocket_init(state) do
-    IO.inspect(state)
-    IO.puts("BEFORE Registry.Phraze.............")
     Registry.Phraze
-    |> IO.inspect()
     |> Registry.register(state.registry_key, {})
-    IO.inspect(self())
-    IO.puts("AFTER.............")
+
     {:ok, state}
   end
 
   def websocket_handle({:text, message}, state) do
     IO.puts("received message: #{message}")
-    IO.inspect(message)
-    IO.puts("typeof message: #{typeof(message)}")
+    IO.puts("typeof message: #{V.kind(message)}")
     handle_msg(message, state)
     {:reply, {:text, "ok"}, state}
   end
 
-
   def handle_msg("ping" = message) do
     IO.puts("arity/1 #{message} pong")
     {:ok, "pong"}
-    #Process.send(self(), "pong", [])
+    # Process.send(self(), "pong", [])
   end
 
   def handle_msg("ping" = message, _state) do
@@ -43,25 +40,49 @@ defmodule Phraze.Signaler do
     Process.send(self(), "pong", [])
   end
 
-  def handle_msg(message, state) do
-    Registry.Phraze
-    |> Registry.dispatch(
+  # First
+  def handle_msg(message, _state) do
+    # The Dispatcher will digest the message and return with list of pids
+    respond = Dispatcher.handle_request(self(), message)
 
-      state.registry_key, fn(entries) ->
+    # TODO - handle list of pids, not only self()
+    case respond do
+      {:ok, action, data} ->
+        {:ok, respond} = Jason.encode(%{action: action, data: data})
+        Process.send(self(), respond, [])
 
-        IO.puts("Typeof entries: #{typeof(entries)}")
-        IO.inspect(entries)
-        for {pid, _} <- entries do
-          if pid != self() do
-            cmd(message, pid)
-          end
-        end
-      end
-    )
+      {:error, {:bad_action, action}} ->
+        Process.send(self(), Jason.encode(%{error: :bad_action, action: action}), [])
+
+      {_, _} ->
+        Process.send(self(), Jason.encode(%{error: :bad_action, action: "unknown"}), [])
+    end
+
+    # for each pid in the list, send the responded message to remote peer
+    # websocket
+    # pid_list
+    # |> Enum.map(&(&1))
+    # |> send_to(respond_message)
+
+    # This needs to be moved to patron and interpreter queue registries instead
+    # Registry.Phraze
+    # |> Registry.dispatch(
+
+    #   state.registry_key, fn(entries) ->
+
+    #     Logger.info("Typeof entries: #{typeof(entries)}")
+    #     IO.inspect(entries)
+    #     for {pid, _} <- entries do
+    #       if pid != self() do
+    #         send_to(message, pid)
+    #       end
+    #     end
+    #   end
+    # )
   end
 
   def websocket_info(info, state) do
-    IO.puts("websocket_info #{info} #{inspect state}")
+    IO.puts("websocket_info #{info} #{inspect(state)}")
     {:reply, {:text, info}, IO.inspect(state)}
   end
 
@@ -70,43 +91,33 @@ defmodule Phraze.Signaler do
     :ok
   end
 
-  def cmd(msg, pid) do
-    payload = Jason.decode!(msg)
-    action = payload["action"]
-    IO.puts("Sending #{action} to #{inspect(pid)} from #{inspect(self())}")
-    case action do
-      "join" ->
-        # Ideally, in the future we keep track of rooms and the uuid
-        # assigned to the room. The room can be an extension number or a conference
-        # call, or simply a readable room name.
-        uuid = payload["fromUserId"]
-        {:ok, offer} = Jason.encode(%{
-          type: "create_offer",
-          fromUserId: uuid
-        })
-        Process.send(pid, offer, [])
-      "sdp" ->
-        Process.send(pid, msg, [])
-      "ice_candidate" ->
-        Process.send(pid, msg, [])
-      _ ->
-        "Unknown action #{action}"
-    end
-  end
+  # defp send_to(pid, payload) do
+  #   IO.puts("Sending #{payload.action} to #{inspect(pid)} from #{inspect(self())}")
+  #   action = payload.action
 
-  defp typeof(a) do
-    cond do
-        is_float(a)    -> "float"
-        is_number(a)   -> "number"
-        is_atom(a)     -> "atom"
-        is_boolean(a)  -> "boolean"
-        is_binary(a)   -> "binary"
-        is_function(a) -> "function"
-        is_list(a)     -> "list"
-        is_tuple(a)    -> "tuple"
-        is_map(a)      -> "map"
-        is_bitstring(a)   -> "string"
-        true           -> "idunno"
-    end
-  end
+  #   case action do
+  #     "join" ->
+  #       # Ideally, in the future we keep track of rooms and the uuid
+  #       # assigned to the room. The room can be an extension number or a conference
+  #       # call, or simply a readable room name.
+  #       uuid = payload["fromUserId"]
+
+  #       {:ok, offer} =
+  #         Jason.encode(%{
+  #           type: "create_offer",
+  #           fromUserId: uuid
+  #         })
+
+  #       Process.send(pid, offer, [])
+
+  #     "sdp" ->
+  #       Process.send(pid, Jason.encode(payload), [])
+
+  #     "ice_candidate" ->
+  #       Process.send(pid, Jason.encode(payload), [])
+
+  #     _ ->
+  #       "Unknown action #{action}"
+  #   end
+  # end
 end

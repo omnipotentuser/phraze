@@ -16,11 +16,33 @@
     </head>
     <body>
         <form>
-            <input id="room_name" type="text" placeholder="room name">
-            <br>
-            <br>
-            <input type="submit" value="connect" id="button">
+            <input id="extension", type="text" placeholder="username"/>
+            <input id="login" type="submit" value="Login"/>
+            <input type="reset">
         </form>
+        <form>
+            <input id="call", type="text" placeholder="user to call"/>
+            <input id="rtcChat" type="submit" value="call"/>
+            <input type="reset">
+        </form>
+
+        <div><input id="vriCall" type="button" value="vri"></div>
+
+<!-- this probably should be broken into its own html page -->
+        <form>
+            <input id="interpreterUsername" type="text" placeholder="interpreter username"/>
+            <input id="vriLogin" type="submit" value="Login"/>
+            <input type="reset">
+        </form>
+<!-- interpreter interface -->
+
+        <form>
+            <!-- channel is for chatroom -->
+            <input id="channel" type="text" placeholder="room name"/>
+            <input id="submitChannel" type="submit" value="channel"/>
+            <input type="reset">
+        </form>
+
         <div id="mediaLayout">
             <main id="localLayout" width="352" height="240">
                 <video id="localVideo" class="rtcvideo" playsinline autoplay muted>
@@ -29,6 +51,6 @@
             <div id="remoteLayout">
             </div>
         </div>
-        <script src="https://webrtc.github.io/adapter/adapter-latest.js">
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"/>
     </body>
 </html>

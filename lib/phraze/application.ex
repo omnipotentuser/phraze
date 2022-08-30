@@ -11,13 +11,10 @@ defmodule Phraze.Application do
   def start(_type, _args) do
     scheme = Application.get_env(:phraze, :scheme)
     options = Application.get_env(:phraze, :cowboy)
+
     children = [
-      # Start the Ecto repository
       Phraze.Repo,
       FunWithFlags.Supervisor,
-      # Phraze.AcdController,
-      # Start a worker by calling: Phraze.Worker.start_link(arg)
-      # {Phraze.Worker, arg}
       Plug.Cowboy.child_spec(
         scheme: scheme,
         plug: Phraze.Router,
@@ -26,7 +23,17 @@ defmodule Phraze.Application do
       Registry.child_spec(
         keys: :duplicate,
         name: Registry.Phraze
-      )
+      ),
+      Phraze.Acd.Vri.InterpreterQueue,
+      Phraze.Acd.Vri.WaitQueue,
+      {Registry, keys: :duplicate, name: Phraze.PeerRegistrar},
+      {Registry, keys: :unique, name: Phraze.SessionRegistry},
+      {DynamicSupervisor,
+       [
+         strategy: :one_for_one,
+         name: Phraze.SessionRunner,
+         max_seconds: 30
+       ]}
     ]
 
     Logger.info("Application started, using #{scheme}.")

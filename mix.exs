@@ -1,5 +1,4 @@
 defmodule Phraze.MixProject do
-
   use Mix.Project
 
   def project do
@@ -38,7 +37,7 @@ defmodule Phraze.MixProject do
     [
       mod: {Phraze.Application, []},
       included_applications: [:fun_with_flags],
-      extra_applications: [:logger, :runtime_tools, :crypto]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -68,7 +67,7 @@ defmodule Phraze.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:fun_with_flags, "~> 1.8.0"},
-      {:websockex, "~> 0.4.3"},
+      {:websockex, "~> 0.4.3"}
     ]
   end
 
