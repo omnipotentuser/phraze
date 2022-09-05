@@ -67,7 +67,7 @@ defmodule Phraze.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:fun_with_flags, "~> 1.8.0"},
-      {:websockex, "~> 0.4.3"}
+      {:websockex, "~> 0.4.3"},
     ]
   end
 

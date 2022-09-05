@@ -3,6 +3,9 @@ defmodule Phraze.Session.ChannelSupervisor do
   Channels are generated dynamically. A DynamicSupervisor is needed to regulate
   the states of each channel. The channel controller will coordinate with this
   supervisor the channel server.
+
+  When the DynamicSupervisor from the Controller generates a new ChannelServer,
+  The action goes through ChannelSupervisor which spawns a new ChannelServer.
   """
 
   use Supervisor, restart: :temporary

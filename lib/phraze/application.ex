@@ -27,11 +27,18 @@ defmodule Phraze.Application do
       Phraze.Acd.Vri.InterpreterQueue,
       Phraze.Acd.Vri.WaitQueue,
       {Registry, keys: :duplicate, name: Phraze.PeerRegistrar},
+      {Registry, keys: :duplicate, name: Phraze.ChannelRegistry},
       {Registry, keys: :unique, name: Phraze.SessionRegistry},
       {DynamicSupervisor,
        [
          strategy: :one_for_one,
          name: Phraze.SessionRunner,
+         max_seconds: 30
+       ]},
+      {DynamicSupervisor,
+       [
+         strategy: :one_for_one,
+         name: Phraze.ChannelRunner,
          max_seconds: 30
        ]}
     ]

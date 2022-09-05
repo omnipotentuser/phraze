@@ -11,5 +11,40 @@ defmodule Phraze.Session.RtcChat do
   remote peer. Think of this as a phone number. Peers who also wish to join an
   active session will want to dial to the room which implies the host's
   extension of the session.
+
   """
+
+  use GenServer, restart: :transient
+  require Logger
+
+  defstruct [:uuid, gender: "none", max_duration: 120, status: "ready"]
+
+  def start_link(args) do
+    args =
+      if Keyword.has_key?(args, :name) do
+        args
+      else
+        Keyword.put(args, :name, "general")
+      end
+
+    name = Keyword.get(args, :name)
+    type = Keyword.get(args, :type)
+    GenServer.start_link(__MODULE__, args, name: via(name, type))
+  end
+
+  def init(_) do
+    {:ok, []}
+  end
+
+  def add(user) do
+    Logger.info("add #{user} to the SessionRegistry")
+  end
+
+  def update(user) do
+    Logger.info("update #{user} in the ChannelRegistry")
+  end
+
+  defp via(key, value) do
+    {:via, Registry, {Phraze.ChannelRegistry, key, value}}
+  end
 end

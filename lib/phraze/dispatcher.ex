@@ -23,6 +23,7 @@ defmodule Phraze.Dispatcher do
 
   alias Phraze.Acd.{Registrar}
   alias Phraze.{SessionSupervisor, SessionRunner}
+  alias Phraze.Session.Controller, as: SessionController
 
   # Signaler calls this to send out the call type for the acd to handle. The
   # handler here then begins the process assigning the socket pid and other
@@ -38,13 +39,37 @@ defmodule Phraze.Dispatcher do
   # type: type of call request - register_patron, vri_patron, vrs_patron,
   # vri_agent, vrs_agent uuid: the user id of user agent (UA) created by the end
   # user application device: the device of the end user if exists. may be empty.
+  @doc """
+    SEQUENCE
+    1. User A sends 'call' invite to user B
+    2. A new Session is created that stores the user A pid, uuid, and username.
+       Session id is created.
+    3. Phraze sends action 'call' to user B with payload of %{ action: 'call', session_id: Number.t()
+    remote_peer: [%{username: String.t(), userid: String.t()}]}
+    4. User B responds with accept call invite, with action 'accept' and payload
+       of %{local_userid: String.t(), remote_users: [%{userid: String.t()}]}
+    5. Phraze probes the payload from User B 'accept' and updates the Session of
+       the User B
+    6. User B sends action 'ice_config'. Phraze responds with action
+       'ice_config' of the payload ice configs
+    7. User B creates SDP offer to all remote peers it accepted from the call
+       invite and sends sdp to Phraze with payload %{remote_userid: String.t(),
+       sdp: String.t()}
+    8. Phraze digests the sdp action from User B and sends to target remote
+       peers the offer SDP
+    9. User A and other users currently in the session gets the sdp offer.
+    10. Each remote user sends ice_config action to Phraze. Same as #6.
+    11. Each remote user creates SDP answer and sends Phraze. Phraze sends the
+        sdp answer payload to User B.
+    12. The negotiation is complete.
+  """
   def handle_request(pid, payload) do
     decoded_payload = Jason.decode!(payload, keys: :atoms)
-    IO.inspect(decoded_payload, label: "decoded_payload")
     route_to(decoded_payload.action, pid, decoded_payload)
   end
 
   # when a peer connects they register by adding themselves to the Registry.
+  @spec route_to(String.t(), Pid.t(), any) :: {Atom.t(), Atom.t(), any}
   defp route_to("login", pid, payload) do
     reg_pid = Registrar.UserAgent.add(%{pid: pid, payload: payload})
     Logger.info("Register pid created: #{inspect(reg_pid)}")
@@ -52,32 +77,31 @@ defmodule Phraze.Dispatcher do
     {:ok, :login, %{my_user_id: payload.myUserId, extension: payload.extension}}
   end
 
-  # dont need to implement until later when chatroom feature is ready to be
-  # worked on
-  defp route_to("join_channel", _pid, payload) do
-    Logger.info("TODO: implement join_channel")
-    # peers_id could have a format such as [%{pid: t.number(), extension:
-    # t.bitstring()}]
-    {:ok, :login, %{my_user_id: payload.myUserId, peers_id: []}}
-  end
-
   # Peer calls an extension or username. Dispatcher needs to do a lookup if
   # username or extension exists in the Registrar, otherwise it is a hearing
-  # number to be forwarded to freeswitch for PSTN
-  defp route_to("call", pid, payload) do
-    Logger.info("TODO: route :call -- #{inspect(payload)} from #{inspect(pid)}")
-    # adds a new supervisor to the Application Supervisor Tree
-    DynamicSupervisor.start_child(
-      SessionRunner,
-      {SessionSupervisor, %{pid: pid, payload: payload}}
-    )
+  # number to be forwarded to freeswitch for PSTN.
 
-    # creates a SessionSupervisor Supervisor
+  defp route_to("call", pid, payload) do
+    Logger.info("route :call -- #{inspect(payload)} from #{inspect(pid)}")
+
+    {:ok, agents} = SessionController.call_peer({pid, payload})
+    # TODO - test this
+    pids = Enum.map(agents, fn {pid, %{extension: _, myUserId: _}} ->
+      pid
+    end)
+    {:ok, :call, %{from_user_id: payload.myUserId, from_extension: payload.extension, peer_pids: pids}}
   end
 
-  defp route_to("message", pid, payload) do
-    Logger.info("TODO: route :message -- #{inspect(payload)} from #{inspect(pid)}")
-    {:ok}
+  defp route_to("accept", pid, payload) do
+    Logger.info("route :call -- #{inspect(payload)} from #{inspect(pid)}")
+
+    # 4. User B responds with accept call invite, with action 'accept' and payload
+    # of %{local_userid: String.t(), remote_users: [%{userid: String.t()}]}
+    # 5. Phraze probes the payload from User B 'accept' and updates the Session of
+    #   the User B
+    SessionController.accept_peer({pid, payload})
+
+    {:ok, :accept, %{my_user_id: payload.myUserId, peers_id: []}}
   end
 
   # patron sends a message to start a vri call
@@ -95,6 +119,12 @@ defmodule Phraze.Dispatcher do
     {:ok}
   end
 
+  defp route_to("ice_config", pid, payload) do
+    Logger.info("TODO: route :ice_config -- #{inspect(payload)} from #{inspect(pid)}")
+    # Session.Controller.ice_config(pid, channel, payload)
+    {:ok}
+  end
+
   # May want to test this using FunWithFlags when I am ready to add type
   # for routing
   defp route_to("sdp", pid, payload) do
@@ -106,6 +136,21 @@ defmodule Phraze.Dispatcher do
   defp route_to("ice_candidate", pid, payload) do
     Logger.info("TODO: route :ice_candidate -- #{inspect(payload)} from #{inspect(pid)}")
     # Session.Controller.ice_candidate(pid, channel, payload)
+    {:ok}
+  end
+
+  # dont need to implement as part of first phase
+  defp route_to("join_channel", _pid, payload) do
+    Logger.info("TODO: implement join_channel")
+    # peers_id could have a format such as [%{pid: t.number(), extension:
+    # t.bitstring()}]
+    {:ok, :login, %{my_user_id: payload.myUserId, peers_id: []}}
+  end
+
+  # TODO - describe what message role is. More of a UI thing, but is message
+  # sent during a call and/or within channel?
+  defp route_to("message", pid, payload) do
+    Logger.info("TODO: route :message -- #{inspect(payload)} from #{inspect(pid)}")
     {:ok}
   end
 
