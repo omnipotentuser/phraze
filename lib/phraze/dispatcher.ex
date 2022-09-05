@@ -44,7 +44,7 @@ defmodule Phraze.Dispatcher do
     1. User A sends 'call' invite to user B
     2. A new Session is created that stores the user A pid, uuid, and username.
        Session id is created.
-    3. Phraze sends action 'call' to user B with payload of %{ action: 'call', session_id: Number.t()
+    3. Phraze sends action 'call' to user B with payload of %{ action: 'call', session_id: integer,
     remote_peer: [%{username: String.t(), userid: String.t()}]}
     4. User B responds with accept call invite, with action 'accept' and payload
        of %{local_userid: String.t(), remote_users: [%{userid: String.t()}]}
@@ -63,15 +63,15 @@ defmodule Phraze.Dispatcher do
         sdp answer payload to User B.
     12. The negotiation is complete.
   """
-  def handle_request(pid, payload) do
+  def handle_request(socket_pid, payload) do
     decoded_payload = Jason.decode!(payload, keys: :atoms)
-    route_to(decoded_payload.action, pid, decoded_payload)
+    route_to(decoded_payload.action, socket_pid, decoded_payload)
   end
 
   # when a peer connects they register by adding themselves to the Registry.
   @spec route_to(String.t(), Pid.t(), any) :: {Atom.t(), Atom.t(), any}
-  defp route_to("login", pid, payload) do
-    reg_pid = Registrar.UserAgent.add(%{pid: pid, payload: payload})
+  defp route_to("login", socket_pid, payload) do
+    reg_pid = Registrar.UserAgent.add(%{socket_pid: socket_pid, payload: payload})
     Logger.info("Register pid created: #{inspect(reg_pid)}")
 
     {:ok, :login, %{my_user_id: payload.myUserId, extension: payload.extension}}
@@ -81,15 +81,22 @@ defmodule Phraze.Dispatcher do
   # username or extension exists in the Registrar, otherwise it is a hearing
   # number to be forwarded to freeswitch for PSTN.
 
-  defp route_to("call", pid, payload) do
-    Logger.info("route :call -- #{inspect(payload)} from #{inspect(pid)}")
+  defp route_to("call", socket_pid, payload) do
+    Logger.info("route :call -- #{inspect(payload)} from #{inspect(socket_pid)}")
 
-    {:ok, agents} = SessionController.call_peer({pid, payload})
-    # TODO - test this
-    pids = Enum.map(agents, fn {pid, %{extension: _, myUserId: _}} ->
-      pid
+    # agents is the list of devices the callee is registered as
+    # session_description includes sessionid, and peer info such as extension and peerid
+    {:ok, callee_agents, session_description} = SessionController.handle_call({socket_pid, payload})
+
+    destinations = Enum.map(callee_agents, fn {_pid, %{extension: extension, myUserId: peerid}} ->
+      %{extension: extension, peerid: peerid}
     end)
-    {:ok, :call, %{from_user_id: payload.myUserId, from_extension: payload.extension, peer_pids: pids}}
+
+    {
+      :ok,
+      :call,
+      %{session: session_description, destinations: destinations}
+    }
   end
 
   defp route_to("accept", pid, payload) do

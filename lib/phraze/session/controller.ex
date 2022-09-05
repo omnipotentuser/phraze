@@ -15,24 +15,37 @@ defmodule Phraze.Session.Controller do
   # 3. Phraze sends action 'call' to user B with payload of %{ action: 'call',
   # remote_peer: [%{username: String.t(), userid: String.t()}]}
   # creates a SessionSupervisor Supervisor
-   @spec call_peer({pid(), map()}) :: {atom(), [{pid(), any}]}
-  def call_peer({pid, payload}) do
-    Logger.info("create_session #{pid}")
+   @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}]}
+  def handle_call({socket_pid, payload}) do
+    Logger.info("create_session #{socket_pid}")
 
     # DynamicSupervisor creates new child through its Supervisor of RtcChat which uses :via
 
     # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
     # create a new Session.
 
-    sessionid = UUID.uuid4()
-    payload = Map.merge(payload, %{sessionid: sessionid})
+    session = if payload.sessionid do
+      SessionRegistry.lookup(payload.sessionid)
+    end
 
-    DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {pid, payload}})
+    session_description = case length(session) do
+      s when s > 0 ->
+        # TODO - fix the parameters to show more than just session arg
+        # such as [{extension, peerid}]
+        Map.merge(payload, %{session: session})
+      _ ->
+        sessionid = UUID.uuid4()
+        Map.merge(payload, %{sessionid: sessionid})
+        DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {socket_pid, payload}})
+        payload
+    end
+
 
     # get remote userid from PeerRegistrar
     # [{pid, %{extension: extension, myUserId: uid, status: available, action: action}} | _] =
-    agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
-    {:ok, agents}
+
+    callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
+    {:ok, callee_agents, session_description}
   end
 
   def accept({pid, payload}) do
