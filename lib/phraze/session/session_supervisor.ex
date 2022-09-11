@@ -7,7 +7,7 @@ defmodule Phraze.Session.SessionSupervisor do
 
   use Supervisor, restart: :temporary
 
-  alias Phraze.Session.{RtcChat, Vri, AiCall}
+  alias Phraze.Session.{RtcChat}
 
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args)
@@ -15,7 +15,7 @@ defmodule Phraze.Session.SessionSupervisor do
 
   def init(args) do
 
-    {_pid, %{action: action}} = args
+    %{action: action} = args
 
     options = [
       strategy: :one_for_one,

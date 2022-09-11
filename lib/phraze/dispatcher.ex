@@ -106,7 +106,7 @@ defmodule Phraze.Dispatcher do
     # of %{local_userid: String.t(), remote_users: [%{userid: String.t()}]}
     # 5. Phraze probes the payload from User B 'accept' and updates the Session of
     #   the User B
-    SessionController.accept_peer({pid, payload})
+    SessionController.accept({pid, payload})
 
     {:ok, :accept, %{my_user_id: payload.myUserId, peers_id: []}}
   end

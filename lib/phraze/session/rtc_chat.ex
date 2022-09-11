@@ -8,22 +8,39 @@ defmodule Phraze.Session.RtcChat do
   use GenServer, restart: :transient
   require Logger
 
-  defstruct [:sessionid, :updated_at, created_at: DateTime.utc_now(), status: "active"]
+  # defstruct [:session_id, :updated_at, created_at: DateTime.utc_now, status: "active"]
 
   # create a new session that carries the state of the peers and information about the session
   # payload =
   # %{ pid, %{action: String.t(), peer: String.t(), myUserId: String.t(), sessionid: String.t() }}
-  def start_link(payload) do
-
-    # TODO break down payload and sort into structured state
-    sessionid = 'foo'
-    peers = 'boo'
-    GenServer.start_link(__MODULE__, payload, name: via(sessionid, peers))
+  def start_link(session) do
+    id = Map.get(session, :session_id)
+    session = Map.merge(session, %{
+      created_at: DateTime.utc_now,
+      node: Node.self,
+      status: :provisioning
+    })
+    GenServer.start_link(__MODULE__, payload, name: via(id, session))
   end
 
-  def init(payload) do
+  def init(session) do
     Logger.info("#{payload} store payload stuff into state")
-    {:ok, []}
+
+    {:ok, session, {:continue, :session_create}}
+  end
+
+  def handle_continue(:session_create, session) do
+    Logger.info("handle_continue with CDR #{inspect session}")
+    # can update state of session from CDR and send below
+    {:stop, :normal, session}
+  end
+
+  def get_session(session_id) do
+    Registry.lookup(Phraze.SessionRegistry, session_id)
+  end
+
+  def update_session() do
+
   end
 
   def add(user) do
@@ -34,7 +51,7 @@ defmodule Phraze.Session.RtcChat do
     Logger.info("update #{user} in the SessionRegistry")
   end
 
-  defp via(key, value) do
-    {:via, Registry, {Phraze.SessionRegistry, key, value}}
+  defp via(session_id, session) do
+    {:via, Registry, {Phraze.SessionRegistry, session_id, session}}
   end
 end

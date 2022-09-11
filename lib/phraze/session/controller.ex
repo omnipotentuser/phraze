@@ -4,7 +4,8 @@ defmodule Phraze.Session.Controller do
   controls as the interface to the type of sessions.
   """
 
-  # alias Phraze.{SessionRegistry}
+  alias Phraze.{SessionRunner, SessionRegistry}
+  alias Phraze.Session.{SessionSupervisor, RtcChat}
   require Logger
 
   # Need to add functions to get, create, insert, lookups sessions
@@ -15,7 +16,7 @@ defmodule Phraze.Session.Controller do
   # 3. Phraze sends action 'call' to user B with payload of %{ action: 'call',
   # remote_peer: [%{username: String.t(), userid: String.t()}]}
   # creates a SessionSupervisor Supervisor
-   @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}]}
+   @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}], map()}
   def handle_call({socket_pid, payload}) do
     Logger.info("create_session #{socket_pid}")
 
@@ -24,21 +25,46 @@ defmodule Phraze.Session.Controller do
     # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
     # create a new Session.
 
-    session = if payload.sessionid do
-      SessionRegistry.lookup(payload.sessionid)
+    with {_pid, session} <- RtcChat.get_session(Map.get(payload, :session_id)),
+          session_description <- Map.take(session, [:peers, :session_id]),
+          callee_agents <- Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension)) do
+      {:ok, callee_agents, session_description}
+    else
+
+      # create a new session then do a lookup in the registry to get the session
+      session = Map.new(%{
+        session_id: UUID.uuid4(),
+        action: payload.action,
+        peers: [
+          peer_name: payload.peerName,
+          my_user_id: payload.myUserId,
+          joined_at: DateTime.utc_now,
+          device: "unknown"
+        ]
+      })
+
+      DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
+      {_pid, %{session_id: s_id, peers: peers}} = RtcChat.get_session(Map.get(session, :session_id))
+      {:ok, callee_agents, %{s_id, peers}}
+
     end
 
-    session_description = case length(session) do
-      s when s > 0 ->
-        # TODO - fix the parameters to show more than just session arg
-        # such as [{extension, peerid}]
-        Map.merge(payload, %{session: session})
-      _ ->
-        sessionid = UUID.uuid4()
-        Map.merge(payload, %{sessionid: sessionid})
-        DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {socket_pid, payload}})
-        payload
-    end
+
+    # session = if Map.has_key?(payload, :sessionid) do
+    #   Registry.lookup(SessionRegistry, payload.sessionid)
+    # end
+
+    # session_description = case length(session) do
+    #   s when s > 0 ->
+    #     # TODO - fix the parameters to show more than just session arg
+    #     # such as [{extension, peerid}]
+    #     Map.merge(payload, %{session: session})
+    #   _ ->
+    #     sessionid = UUID.uuid4()
+    #     Map.merge(payload, %{sessionid: sessionid})
+    #     DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {socket_pid, payload}})
+    #     payload
+    # end
 
 
     # get remote userid from PeerRegistrar
