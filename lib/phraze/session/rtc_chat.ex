@@ -8,8 +8,6 @@ defmodule Phraze.Session.RtcChat do
   use GenServer, restart: :transient
   require Logger
 
-  # defstruct [:session_id, :updated_at, created_at: DateTime.utc_now, status: "active"]
-
   # create a new session that carries the state of the peers and information about the session
   # payload =
   # %{ pid, %{action: String.t(), peer: String.t(), myUserId: String.t(), sessionid: String.t() }}
@@ -17,6 +15,7 @@ defmodule Phraze.Session.RtcChat do
     id = Map.get(session, :session_id)
     session = Map.merge(session, %{
       created_at: DateTime.utc_now,
+      updated_at: DateTime.utc_now,
       node: Node.self,
       status: :provisioning
     })
