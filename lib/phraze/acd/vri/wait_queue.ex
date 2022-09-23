@@ -18,7 +18,7 @@ defmodule Phraze.Acd.Vri.WaitQueue do
   """
   defstruct [:uuid, gender: "none", max_duration: 120, status: "ready"]
 
-  def start_link(_) do
+  def start_link(args) do
     IO.puts("Starting Queue for User Agents to go into waiting status")
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
@@ -36,20 +36,20 @@ defmodule Phraze.Acd.Vri.WaitQueue do
   #   GenServer.call(__MODULE__, {:put, key})
   # end
 
-  def init(_) do
+  def init(args) do
     :timer.send_after(1000, :mock_db)
     # initialize Ecto to populate ACDs if any remains after last time the controller accessed
     {:ok, []}
   end
 
   # get patron acd from Registry
-  def handle_call({:get_acd, :patron}, _, state) do
-    {:reply, "", state}
+  def handle_call({:get_acd, :patron}, _, queue) do
+    {:reply, "", queue}
   end
 
   # get interpreter acd from Registry
-  def handle_call({:get_acd, :interpreter}, _, state) do
-    {:reply, "", state}
+  def handle_call({:get_acd, :interpreter}, _, queue) do
+    {:reply, "", queue}
   end
 
   # def handle_cast({:put, speed}, state) when length(state) < 1024 do
@@ -62,7 +62,7 @@ defmodule Phraze.Acd.Vri.WaitQueue do
     {:reply, "", []}
   end
 
-  def handle_info(:mock_db, state) do
-    {:noreply, state}
+  def handle_info(:mock_db, queue) do
+    {:noreply, queue}
   end
 end
