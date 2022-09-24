@@ -19,7 +19,7 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## Run local environment
 
-    # Running in production we set up local environment  
+    # Running in local env we set up by
     `. .env`
 
 ## Running Distillery and creating releases
