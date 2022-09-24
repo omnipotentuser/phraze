@@ -14,7 +14,6 @@ defmodule Phraze.Session.SessionSupervisor do
   end
 
   def init(args) do
-
     %{action: action} = args
 
     options = [
@@ -22,13 +21,13 @@ defmodule Phraze.Session.SessionSupervisor do
       max_seconds: 30
     ]
 
-    children = case action do
-      "call" -> [{RtcChat, args}]
-      "vri_call" -> [{Vri, args}]
-      "ai_call" -> [{AiChat, args}]
-    end
+    children =
+      case action do
+        "call" -> [{RtcChat, args}]
+        "vri_call" -> [{Vri, args}]
+        "ai_call" -> [{AiChat, args}]
+      end
 
     Supervisor.init(children, options)
-
   end
 end

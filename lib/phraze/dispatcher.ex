@@ -86,11 +86,13 @@ defmodule Phraze.Dispatcher do
 
     # agents is the list of devices the callee is registered as
     # session_description includes sessionid, and peer info such as extension and peerid
-    {:ok, callee_agents, session_description} = SessionController.handle_call({socket_pid, payload})
+    {:ok, callee_agents, session_description} =
+      SessionController.handle_call({socket_pid, payload})
 
-    destinations = Enum.map(callee_agents, fn {_pid, %{extension: extension, myUserId: peerid}} ->
-      %{extension: extension, peerid: peerid}
-    end)
+    destinations =
+      Enum.map(callee_agents, fn {_pid, %{extension: extension, myUserId: peerid}} ->
+        %{extension: extension, peerid: peerid}
+      end)
 
     {
       :ok,

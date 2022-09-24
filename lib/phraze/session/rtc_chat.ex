@@ -13,12 +13,15 @@ defmodule Phraze.Session.RtcChat do
   # %{ pid, %{action: String.t(), peer: String.t(), myUserId: String.t(), sessionid: String.t() }}
   def start_link(session) do
     id = Map.get(session, :session_id)
-    session = Map.merge(session, %{
-      created_at: DateTime.utc_now,
-      updated_at: DateTime.utc_now,
-      node: Node.self,
-      status: :provisioning
-    })
+
+    session =
+      Map.merge(session, %{
+        created_at: DateTime.utc_now(),
+        updated_at: DateTime.utc_now(),
+        node: Node.self(),
+        status: :provisioning
+      })
+
     GenServer.start_link(__MODULE__, payload, name: via(id, session))
   end
 
@@ -29,7 +32,7 @@ defmodule Phraze.Session.RtcChat do
   end
 
   def handle_continue(:session_create, session) do
-    Logger.info("handle_continue with CDR #{inspect session}")
+    Logger.info("handle_continue with CDR #{inspect(session)}")
     # can update state of session from CDR and send below
     {:stop, :normal, session}
   end
@@ -39,7 +42,6 @@ defmodule Phraze.Session.RtcChat do
   end
 
   def update_session() do
-
   end
 
   def add(user) do
