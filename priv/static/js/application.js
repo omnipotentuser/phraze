@@ -18,6 +18,7 @@
       offerToReceiveVideo: 1
     }
     var myUserId = null;
+    var extension = null;
 
     async function createMedia(constraints){
       console.log('setMedia')
@@ -213,7 +214,7 @@
       login() {
 
         const input = document.getElementById("extension")
-        const extension = input.value
+        extension = input.value
         input.value = ""
 
 
@@ -235,7 +236,7 @@
       call() {
 
         const input = document.getElementById("call")
-        const peerName = input.value
+        const to_extension = input.value
         input.value = ""
 
 
@@ -243,8 +244,9 @@
         removeRemoteUserConnection()
         var payload = {
           action: "call",
-          peer: peerName,
-          myUserId: myUserId
+          to_extension: to_extension,
+          from_extension: extension,
+          from_user_id: myUserId
         }
         this.socket.send(
           JSON.stringify(payload)

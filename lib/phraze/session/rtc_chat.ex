@@ -22,11 +22,11 @@ defmodule Phraze.Session.RtcChat do
         status: :provisioning
       })
 
-    GenServer.start_link(__MODULE__, payload, name: via(id, session))
+    GenServer.start_link(__MODULE__, session, name: via(id, session))
   end
 
   def init(session) do
-    Logger.info("#{payload} store payload stuff into state")
+    Logger.info("Initializing #{session} session")
 
     {:ok, session, {:continue, :session_create}}
   end

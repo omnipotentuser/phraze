@@ -1,5 +1,7 @@
 defmodule Phraze.Session.Session do
   @moduledoc false
+  alias Phraze.Session.Peer
+
   defstruct [
     :session_id,
     :action,
@@ -7,6 +9,6 @@ defmodule Phraze.Session.Session do
     :updated_at,
     created_at: DateTime.utc_now(),
     status: :provisioning,
-    peers: []
+    peers: [%Peer{}]
   ]
 end
