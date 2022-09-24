@@ -12,7 +12,7 @@ defmodule Phraze.Session.RtcChat do
   # payload =
   # %{ pid, %{action: String.t(), peer: String.t(), myUserId: String.t(), sessionid: String.t() }}
   def start_link(session) do
-    id = Map.get(session, :session_id)
+    session_id = Map.get(session, :session_id)
 
     session =
       Map.merge(session, %{
@@ -22,7 +22,7 @@ defmodule Phraze.Session.RtcChat do
         status: :provisioning
       })
 
-    GenServer.start_link(__MODULE__, session, name: via(id, session))
+    GenServer.start_link(__MODULE__, session, name: via(session_id, session))
   end
 
   def init(session) do
@@ -37,6 +37,7 @@ defmodule Phraze.Session.RtcChat do
     {:stop, :normal, session}
   end
 
+  @spec get_session(String.t()) :: [{pid, map}]
   def get_session(session_id) do
     Registry.lookup(Phraze.SessionRegistry, session_id)
   end

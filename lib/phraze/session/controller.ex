@@ -52,37 +52,15 @@ defmodule Phraze.Session.Controller do
         }
 
         DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
+        callee_agents = Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension))
 
         [{_pid, %Session{session_id: s_id, peers: peers}}] =
           RtcChat.get_session(Map.get(session, :session_id))
 
-        callee_agents = Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension))
         session_description = %{session_id: s_id, peers: peers}
 
         {:ok, callee_agents, session_description}
     end
-
-    # session = if Map.has_key?(payload, :sessionid) do
-    #   Registry.lookup(SessionRegistry, payload.sessionid)
-    # end
-
-    # session_description = case length(session) do
-    #   s when s > 0 ->
-    #     # TODO - fix the parameters to show more than just session arg
-    #     # such as [{extension, peerid}]
-    #     Map.merge(payload, %{session: session})
-    #   _ ->
-    #     sessionid = UUID.uuid4()
-    #     Map.merge(payload, %{sessionid: sessionid})
-    #     DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {socket_pid, payload}})
-    #     payload
-    # end
-
-    # get remote userid from PeerRegistrar
-    # [{pid, %{extension: extension, myUserId: uid, status: available, action: action}} | _] =
-
-    # callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
-    # {:ok, callee_agents, session_description}
   end
 
   def accept({pid, payload}) do

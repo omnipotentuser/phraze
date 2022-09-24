@@ -51,11 +51,8 @@ defmodule Phraze.Signaler do
         {:ok, respond} = Jason.encode(%{action: action, data: data})
         Process.send(self(), respond, [])
 
-      {:error, {:bad_action, action}} ->
+      {:error, {:bad_action, action}, _data} ->
         Process.send(self(), Jason.encode(%{error: :bad_action, action: action}), [])
-
-      {_, _} ->
-        Process.send(self(), Jason.encode(%{error: :bad_action, action: "unknown"}), [])
     end
 
     # for each pid in the list, send the responded message to remote peer
