@@ -4,7 +4,7 @@ defmodule Phraze.Session.Controller do
   controls as the interface to the type of sessions.
   """
 
-  alias Phraze.{SessionRunner, SessionRegistry}
+  alias Phraze.SessionRunner
   alias Phraze.Session.{Session, Peer, SessionSupervisor, RtcChat}
   require Logger
 
@@ -33,7 +33,7 @@ defmodule Phraze.Session.Controller do
     # holds a list of pids of same extension registered
     # callee_agents =
     with session_id when session_id != nil <- Map.get(payload, :session_id),
-         {_pid, %Session{} = session} <- RtcChat.get_session(session_id),
+         [{_pid, %Session{} = session}] <- RtcChat.get_session(session_id),
          session_description <- Map.take(session, [:peers, :session_id]),
          callee_agents <- Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension)) do
       {:ok, callee_agents, session_description}
@@ -44,17 +44,16 @@ defmodule Phraze.Session.Controller do
           session_id: UUID.uuid4(),
           action: payload.action,
           peers: [
-            Keyword.put(
-              %Peer{},
+            %Peer{
               extension: payload.from_extension,
               user_id: payload.from_user_id
-            )
+            }
           ]
         }
 
         DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
 
-        {_pid, %Session{session_id: s_id, peers: peers}} =
+        [{_pid, %Session{session_id: s_id, peers: peers}}] =
           RtcChat.get_session(Map.get(session, :session_id))
 
         callee_agents = Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension))
@@ -82,12 +81,12 @@ defmodule Phraze.Session.Controller do
     # get remote userid from PeerRegistrar
     # [{pid, %{extension: extension, myUserId: uid, status: available, action: action}} | _] =
 
-    callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
-    {:ok, callee_agents, session_description}
+    # callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
+    # {:ok, callee_agents, session_description}
   end
 
   def accept({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("accept #{pid}, #{payload}")
 
     # search RtcChat Session registry based on:
     # guards = [:==, :"$3", ...?]
@@ -95,12 +94,12 @@ defmodule Phraze.Session.Controller do
   end
 
   def reject({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("reject #{pid}, #{payload}")
     {:ok}
   end
 
   def miss({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("miss #{pid}, #{payload}")
     {:ok}
   end
 
