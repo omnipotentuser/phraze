@@ -6,9 +6,9 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :phraze, Phraze.Repo,
-  hostname: System.get_env("DATABASE_HOSTNAME"),
-  username: System.get_env("DATABASE_USERNAME"),
-  password: System.get_env("DATABASE_PASSWORD"),
+  hostname: System.get_env("DATABASE_HOSTNAME", "localhost"),
+  username: System.get_env("DATABASE_USERNAME", "postgres"),
+  password: System.get_env("DATABASE_PASSWORD", "postgres"),
   database: System.get_env("DATABASE_NAME"),
   # database: "phraze_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,

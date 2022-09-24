@@ -4,8 +4,8 @@ defmodule Phraze.Session.Controller do
   controls as the interface to the type of sessions.
   """
 
-  alias Phraze.{SessionRunner, SessionRegistry}
-  alias Phraze.Session.{Session, SessionSupervisor, RtcChat}
+  alias Phraze.SessionRunner
+  alias Phraze.Session.{Session, Peer, SessionSupervisor, RtcChat}
   require Logger
 
   # Need to add functions to get, create, insert, lookups sessions
@@ -15,8 +15,9 @@ defmodule Phraze.Session.Controller do
   # that stores the user A pid, uuid, and username
   # 3. Phraze sends action 'call' to user B with payload of %{ action: 'call',
   # remote_peer: [%{username: String.t(), userid: String.t()}]}
+  #
   # creates a SessionSupervisor Supervisor
-   @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}], map()}
+  @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}], map()}
   def handle_call({socket_pid, payload}) do
     Logger.info("create_session #{socket_pid}")
 
@@ -25,33 +26,41 @@ defmodule Phraze.Session.Controller do
     # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
     # create a new Session.
 
-    with {_pid, %Session{} = session} <- RtcChat.get_session(Map.get(payload, :session_id)),
-          session_description <- Map.take(session, [:peers, :session_id]),
-          callee_agents <- Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension)) do
+    # session_description carries remote peer info along with session id
+    # session_description = %{peers: [], session_id: String.t()}
+    #
+    # callee_agents carries destination callee agent info where the Registrar
+    # holds a list of pids of same extension registered
+    # callee_agents =
+    with session_id when session_id != nil <- Map.get(payload, :session_id),
+         [{_pid, %Session{} = session}] <- RtcChat.get_session(session_id),
+         session_description <- Map.take(session, [:peers, :session_id]),
+         callee_agents <- Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension)) do
       {:ok, callee_agents, session_description}
     else
-      {:error, errmsg} ->
-        {:error, errmsg}
       _ ->
-
         # create a new session then do a lookup in the registry to get the session
         session = %Session{
           session_id: UUID.uuid4(),
           action: payload.action,
           peers: [
-            peer_name: payload.peerName,
-            my_user_id: payload.myUserId,
-            joined_at: DateTime.utc_now,
-            device: "unknown"
+            %Peer{
+              extension: payload.from_extension,
+              user_id: payload.from_user_id
+            }
           ]
         }
 
         DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
-        {_pid, %{session_id: s_id, peers: peers}} = RtcChat.get_session(Map.get(session, :session_id))
-        {:ok, callee_agents, %{s_id, peers}}
 
+        [{_pid, %Session{session_id: s_id, peers: peers}}] =
+          RtcChat.get_session(Map.get(session, :session_id))
+
+        callee_agents = Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension))
+        session_description = %{session_id: s_id, peers: peers}
+
+        {:ok, callee_agents, session_description}
     end
-
 
     # session = if Map.has_key?(payload, :sessionid) do
     #   Registry.lookup(SessionRegistry, payload.sessionid)
@@ -69,16 +78,15 @@ defmodule Phraze.Session.Controller do
     #     payload
     # end
 
-
     # get remote userid from PeerRegistrar
     # [{pid, %{extension: extension, myUserId: uid, status: available, action: action}} | _] =
 
-    callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
-    {:ok, callee_agents, session_description}
+    # callee_agents = Registry.lookup(Phraze.PeerRegistrar, payload.extension)
+    # {:ok, callee_agents, session_description}
   end
 
   def accept({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("accept #{pid}, #{payload}")
 
     # search RtcChat Session registry based on:
     # guards = [:==, :"$3", ...?]
@@ -86,12 +94,12 @@ defmodule Phraze.Session.Controller do
   end
 
   def reject({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("reject #{pid}, #{payload}")
     {:ok}
   end
 
   def miss({pid, payload}) do
-    Logger.info("create_session #{pid}")
+    Logger.info("miss #{pid}, #{payload}")
     {:ok}
   end
 
