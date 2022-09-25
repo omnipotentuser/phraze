@@ -87,14 +87,16 @@ defmodule Phraze.Dispatcher do
     # agents is the list of socket_pids the callee is registered with
     # session_description includes sessionid, and list of peer info such as
     # extension and peerid
-    {:ok, call_to_agents, session_description} =
-      SessionController.handle_call({socket_pid, payload})
-
-    {
-      :ok,
-      :call,
-      %{session: session_description, call_to_agents: call_to_agents}
-    }
+    case SessionController.handle_call({socket_pid, payload}) do
+      {:ok, session_description, call_to_agents} ->
+        {
+          :ok,
+          :call,
+          %{session: session_description, call_to_agents: call_to_agents}
+        }
+      {:error, reason} ->
+        {:error, :call, reason}
+    end
   end
 
   defp route_to("accept", pid, payload) do

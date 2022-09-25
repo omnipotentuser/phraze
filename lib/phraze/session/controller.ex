@@ -6,7 +6,7 @@ defmodule Phraze.Session.Controller do
 
   alias Phraze.SessionRunner
   alias Phraze.Acd.Registrar.UserAgent
-  alias Phraze.Session.{Session, Peer, SessionSupervisor, RtcChat}
+  alias Phraze.Session.{Session, SessionSupervisor, RtcChat}
   require Logger
 
   # Need to add functions to get, create, insert, lookups sessions
@@ -22,41 +22,9 @@ defmodule Phraze.Session.Controller do
   def handle_call({socket_pid, payload}) do
     Logger.info("create_session #{socket_pid}")
 
-    # DynamicSupervisor creates new child through its Supervisor of RtcChat which uses :via
-
-    # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
-    # create a new Session.
-
-    # May be better to pipe though functions to build session and pass to destination
-    with session_id when session_id != nil <- Map.get(payload, :session_id),
-         [{_pid, %Session{} = session}] <- RtcChat.get_session(session_id),
-         session_description <- Map.take(session, [:peers, :session_id]),
-         callee_agents <- UserAgent.get(Map.get(payload, :extension)) do
-      {:ok, callee_agents, session_description}
-    else
-      _ ->
-        # create a new session then do a lookup in the registry to get the session
-        session = %Session{
-          session_id: UUID.uuid4(),
-          action: payload.action,
-          peers: [
-            %Peer{
-              extension: payload.from_extension,
-              user_id: payload.from_user_id
-            }
-          ]
-        }
-
-        DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
-        [{_pid, callee_agents}] = UserAgent.get(%{extension: Map.get(payload, :extension)})
-
-        [{_pid, %Session{session_id: s_id, peers: peers}}] =
-          RtcChat.get_session(Map.get(session, :session_id))
-
-        session_description = %{session_id: s_id, peers: peers}
-
-        {:ok, callee_agents, session_description}
-    end
+    payload
+    |> find_session()
+    |> build_callee_agents(Map.get(payload, :extension))
   end
 
   def accept({pid, payload}) do
@@ -80,5 +48,48 @@ defmodule Phraze.Session.Controller do
   # TODO - figure out what parameters should be used
   defp search_registry() do
     Logger.info("search_registry")
+  end
+
+  # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
+  # create a new Session.
+  defp find_session(payload) do
+    session_id = Map.get(payload, :session_id)
+    if session_id do
+      case RtcChat.get_session(session_id) do
+        {:ok, %Session{session_id: s_id, peers: peers}} ->
+          {:ok, %Session{session_id: s_id, peers: peers}}
+        {:error, reason} ->
+          {:error, reason}
+      end
+    else
+
+      # probably want to move this section to Session.new()
+      session = Session.new(payload)
+
+      # build_session_description()
+      DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
+      # session =  %Session{session_id: s_id, peers: peers}
+      case RtcChat.get_session(Map.get(session, :session_id)) do
+        {:ok, %Session{session_id: s_id, peers: peers}} ->
+          {:ok, %Session{session_id: s_id, peers: peers}}
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+  end # Map.get(:session_id) # returns nil if not found
+
+  # TODO error check from session value
+  defp build_callee_agents({:ok, session}, extension) do
+    case UserAgent.get(%{extension: extension}) do
+      [{_pid, callee_agents}] ->
+        {:ok, session, callee_agents}
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp build_callee_agents({:error, reason}, extension) do
+    Logger.warn("find_session error #{reason} for extension #{extension}")
+    {:error, reason}
   end
 end

@@ -48,14 +48,15 @@ defmodule Phraze.Signaler do
     # TODO - handle list of pids, not only self()
     case respond do
       {:ok, action, data} ->
-        # function call to handle actions
+
+        # TODO create function call to handle actions
 
         # Need to loop through list of agents to send to
         {:ok, respond} = Jason.encode(%{action: action, data: data})
         Process.send(self(), respond, [])
 
-      {:error, {:bad_action, action}, _data} ->
-        Process.send(self(), Jason.encode(%{error: :bad_action, action: action}), [])
+      {:error, action, reason} ->
+        Process.send(self(), Jason.encode(%{error: action, reason: reason}), [])
     end
 
     # for each pid in the list, send the responded message to remote peer
