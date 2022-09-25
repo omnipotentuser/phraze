@@ -71,7 +71,7 @@ defmodule Phraze.Dispatcher do
   # when a peer connects they register by adding themselves to the Registry.
   @spec route_to(String.t(), Pid.t(), any) :: {Atom.t(), Atom.t(), any}
   defp route_to("login", socket_pid, payload) do
-    reg_pid = Registrar.UserAgent.add(%{socket_pid: socket_pid, payload: payload})
+    reg_pid = Registrar.UserAgent.add({socket_pid, Map.take(payload, [:extension, :user_id])})
     Logger.info("Register pid created: #{inspect(reg_pid)}")
 
     {:ok, :login, %{my_user_id: payload.myUserId, extension: payload.extension}}
@@ -87,18 +87,13 @@ defmodule Phraze.Dispatcher do
     # agents is the list of socket_pids the callee is registered with
     # session_description includes sessionid, and list of peer info such as
     # extension and peerid
-    {:ok, callee_agents, session_description} =
+    {:ok, call_to_agents, session_description} =
       SessionController.handle_call({socket_pid, payload})
-
-    destinations =
-      Enum.map(callee_agents, fn {_pid, %{extension: extension, myUserId: peerid}} ->
-        %{extension: extension, peerid: peerid}
-      end)
 
     {
       :ok,
       :call,
-      %{session: session_description, destinations: destinations}
+      %{session: session_description, call_to_agents: call_to_agents}
     }
   end
 

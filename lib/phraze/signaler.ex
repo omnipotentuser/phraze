@@ -48,6 +48,9 @@ defmodule Phraze.Signaler do
     # TODO - handle list of pids, not only self()
     case respond do
       {:ok, action, data} ->
+        # function call to handle actions
+
+        # Need to loop through list of agents to send to
         {:ok, respond} = Jason.encode(%{action: action, data: data})
         Process.send(self(), respond, [])
 
