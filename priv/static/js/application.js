@@ -226,7 +226,7 @@
         var payload = {
           action: "login",
           extension: extension,
-          myUserId: myUserId
+          user_id: myUserId
         }
         this.socket.send(
           JSON.stringify(payload)

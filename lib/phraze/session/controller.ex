@@ -5,6 +5,7 @@ defmodule Phraze.Session.Controller do
   """
 
   alias Phraze.SessionRunner
+  alias Phraze.Acd.Registrar.UserAgent
   alias Phraze.Session.{Session, Peer, SessionSupervisor, RtcChat}
   require Logger
 
@@ -17,7 +18,7 @@ defmodule Phraze.Session.Controller do
   # remote_peer: [%{username: String.t(), userid: String.t()}]}
   #
   # creates a SessionSupervisor Supervisor
-  @spec handle_call({pid(), map()}) :: {atom(), [{pid(), any}], map()}
+  @spec handle_call({pid(), map()}) :: {atom(), map, map}
   def handle_call({socket_pid, payload}) do
     Logger.info("create_session #{socket_pid}")
 
@@ -26,16 +27,11 @@ defmodule Phraze.Session.Controller do
     # Look up SessionRegistry and see if Session exists based on tuple {extension, userid}. If not, then
     # create a new Session.
 
-    # session_description carries remote peer info along with session id
-    # session_description = %{peers: [], session_id: String.t()}
-    #
-    # callee_agents carries destination callee agent info where the Registrar
-    # holds a list of pids of same extension registered
-    # callee_agents =
+    # May be better to pipe though functions to build session and pass to destination
     with session_id when session_id != nil <- Map.get(payload, :session_id),
          [{_pid, %Session{} = session}] <- RtcChat.get_session(session_id),
          session_description <- Map.take(session, [:peers, :session_id]),
-         callee_agents <- Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension)) do
+         callee_agents <- UserAgent.get(Map.get(payload, :extension)) do
       {:ok, callee_agents, session_description}
     else
       _ ->
@@ -52,7 +48,7 @@ defmodule Phraze.Session.Controller do
         }
 
         DynamicSupervisor.start_child(SessionRunner, {SessionSupervisor, {session}})
-        callee_agents = Registry.lookup(Phraze.PeerRegistrar, Map.get(payload, :extension))
+        [{_pid, callee_agents}] = UserAgent.get(%{extension: Map.get(payload, :extension)})
 
         [{_pid, %Session{session_id: s_id, peers: peers}}] =
           RtcChat.get_session(Map.get(session, :session_id))

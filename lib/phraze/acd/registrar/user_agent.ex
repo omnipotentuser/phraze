@@ -19,14 +19,22 @@ defmodule Phraze.Acd.Registrar.UserAgent do
   defstruct status: @agent_available
 
   # var payload = {
-  #  action: "join",
-  #  extension: extension,
-  #  myUserId: myUserId
+  #   action: "call",
+  #   to_extension: to_extension,
+  #   from_extension: extension,
+  #   from_user_id: myUserId
   # }
-  def add(%{socket_pid: _pid, payload: payload}) do
+  @spec add({
+          :socket_pid,
+          %{
+            :extension => String.t(),
+            :user_id => String.t()
+          }
+        }) :: {:ok, pid} | {:error, {:already_registered, pid}}
+  def add({socket_pid, payload}) do
     Logger.info("Add a new User Agent to the PeerRegistrar")
     # parsed_payload = Jason.decode!(payload, [keys: :atoms])
-    digest = Map.merge(payload, %{status: @agent_available})
+    digest = Map.merge(payload, %{status: @agent_available, socket_pid: socket_pid})
 
     # returns new Register pid
     Registry.register(Phraze.PeerRegistrar, digest.extension, digest)
@@ -42,6 +50,20 @@ defmodule Phraze.Acd.Registrar.UserAgent do
     IO.puts("Updates the agent status to busy")
     # GenServer.cast(__MODULE__, {:put, key})a sessi
     {:ok}
+  end
+
+  @spec get(%{:extension => String.t()}) :: [
+          {
+            pid(),
+            %{
+              :extension => String.t(),
+              :user_id => String.t(),
+              :socket_pid => pid
+            }
+          }
+        ]
+  def get(%{extension: extension}) do
+    Registry.lookup(Phraze.PeerRegistrar, extension)
   end
 
   # def start_link(_) do
