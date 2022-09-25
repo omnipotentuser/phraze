@@ -37,10 +37,16 @@ defmodule Phraze.Session.RtcChat do
     {:stop, :normal, session}
   end
 
-  @spec get_session(String.t()) :: [{pid, map}]
+  @spec get_session(String.t() | nil) :: {:ok, map() } | {:error, String.t()}
   def get_session(session_id) do
-    Registry.lookup(Phraze.SessionRegistry, session_id)
+    case Registry.lookup(Phraze.SessionRegistry, session_id) do
+      [{_pid, session}] ->
+        {:ok, session}
+      [] ->
+        {:error, "Unknown session id #{session_id}"}
+    end
   end
+
 
   def update_session() do
   end

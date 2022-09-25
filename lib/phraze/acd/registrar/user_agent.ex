@@ -52,7 +52,7 @@ defmodule Phraze.Acd.Registrar.UserAgent do
     {:ok}
   end
 
-  @spec get(%{:extension => String.t()}) :: [
+  @spec get(%{:extension => String.t()} | any) :: [
           {
             pid(),
             %{
@@ -61,11 +61,14 @@ defmodule Phraze.Acd.Registrar.UserAgent do
               :socket_pid => pid
             }
           }
-        ]
+        ] | {:error, String.t()}
   def get(%{extension: extension}) do
     Registry.lookup(Phraze.PeerRegistrar, extension)
   end
 
+  def get(ext) do
+    {:error, "Unknown lookup value #{ext}"}
+  end
   # def start_link(_) do
   #   IO.puts("Starting User Agent Registrar")
   #   GenServer.start_link(__MODULE__, nil, name: __MODULE__)
